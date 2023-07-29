@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Compte extends Model
 {
     use HasFactory;
+    public function client(){
+        $this->belongsTo(Client::class, 'client_id');
+    }
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
 }
