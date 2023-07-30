@@ -30,7 +30,10 @@ btnEnvoie.addEventListener("click", () => {
         return response.json();
     })
         .then((datas) => {
-        showNotification(datas.message);
+        showNotification(`${datas.message} avec les frais de ${datas.frais}Fcfa`);
+        if (datas.code !== undefined) {
+            showCode(`le code est:${datas.code}`);
+        }
         console.log(datas);
     });
 });
@@ -63,9 +66,19 @@ function showNotification(message) {
     notificationMessage.textContent = message;
     notificationBox.style.display = 'block';
 }
+function showCode(code) {
+    const codebox = document.getElementById('codebox');
+    const codeText = document.getElementById('codeText');
+    codeText.textContent = code;
+    codebox.style.display = 'block';
+}
 function closeNotification() {
     const notificationBox = document.getElementById('notificationBox');
     notificationBox.style.display = 'none';
+}
+function closeCode() {
+    const codebox = document.getElementById('codebox');
+    codebox.style.display = 'none';
 }
 configureInputCompte(inputCompteExpediteur, nomExpediteur);
 configureInputCompte(inputCompteDestinataire, nomDestinataire);

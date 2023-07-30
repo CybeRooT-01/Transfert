@@ -81,3 +81,68 @@ hr {
     margin: 0;
   }
   
+.info{
+  cursor: pointer;
+}
+
+/* Styles pour le thème sombre du modal */
+.modal-dialog.modal-dark {
+  background-color: #333;
+  color: #fff;
+}
+
+.modal-content {
+  background-color: #333; 
+  border: none; 
+}
+
+.modal-header {
+  background-color: #444; 
+  border-bottom: none; 
+  color: #fff; 
+}
+
+.modal-title {
+  color: #fff; 
+}
+
+.modal-body {
+  background-color: #333; 
+  color: #fff
+}
+
+.modal-footer {
+  background-color: #444; 
+  border-top: none; 
+  color: #fff; 
+}
+
+.code-box{
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  display: none;
+}
+
+.closeCode-btn {
+  float: right;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.closeCode-btn:hover {
+  color: #f00;
+}
+
+.pre-code{
+  display: inline-block;
+  text-align: center;
+}
