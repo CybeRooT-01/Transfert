@@ -26,8 +26,10 @@ class transfertPostRequest extends FormRequest
             "fournisseur"=> "string| required| in:wave,orangemoney,wari,cb",
             "avec_code"=> "boolean",
             "type"=> "string| required | in:depot,retrait,transfert",
-            "numero_telephone_destinataire" => "string| required",
+            "numero_telephone_destinataire" => "string",
             "numero_compte_desti"=> "string",
+            "permanant"=> "boolean",
+            "envoyeur"=> "string | required",
         ];
     }
     public function messages(): array
@@ -41,9 +43,11 @@ class transfertPostRequest extends FormRequest
             'type.required' => 'Le type est obligatoire',
             'type.string' => 'Le type doit être une chaine de caractère',
             'type.in' => 'Le type doit être depot, retrait ou transfert',
-            'numero_telephone_destinataire.required' => 'Le numero de telephone est obligatoire',
             'compte_destinataire_id.required' => 'Le compte destinataire est obligatoire',
             'avec_code.boolean' => 'Le avec code doit être oui ou non',
+            "permanant.boolean" => "Le permant doit être oui ou non",
+            "envoyeur.required" => "L'envoyeur est obligatoire",
         ];
     }
 }
+

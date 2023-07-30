@@ -15,4 +15,10 @@ class Compte extends Model
         'created_at',
         'updated_at'
     ];
+    protected $fillable = [
+        'numero_compte',
+        'solde',
+        'client_id',
+        'fourisseur'
+    ];
 }

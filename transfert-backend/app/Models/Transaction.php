@@ -9,6 +9,17 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'code',
+        'montant',
+        'frais',
+        'envoyeur_id',
+        'receveur_id',
+        'type_transaction',
+        'permanent',
+        'code_transaction',
+        'date_transaction',
+    ];
     public function client()
     {
         return $this->belongsTo(Client::class, 'client_id');
