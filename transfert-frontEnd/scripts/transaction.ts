@@ -8,6 +8,7 @@ const nomExpediteur = document.querySelector(
 const inputCompteDestinataire = document.querySelector(
   ".destinataire"
 ) as HTMLInputElement;
+
 const nomDestinataire = document.querySelector(
   ".nomDestinataire"
 ) as HTMLInputElement;
@@ -19,11 +20,33 @@ const fournisseur = document.querySelector(".fournisseur") as HTMLSelectElement;
 
 const montant = document.querySelector(".montant") as HTMLInputElement;
 
+const destinataire = document.querySelector(".destinataireZone") as HTMLDivElement;
+
+const codeCheckbox = document.getElementById('codeCheckbox') as HTMLInputElement;
+
+// codeCheckbox.addEventListener('change', () => {
+//   const isChecked = codeCheckbox.checked;
+//   console.log(isChecked); 
+// });
+
+
+let typeTransactionValue = typeTransaction.value;
+
+typeTransaction.addEventListener("change", () => {
+  typeTransactionValue = typeTransaction.value;
+  if (typeTransactionValue === "retrait") {
+    destinataire.style.display = "none";
+  } else {
+    destinataire.style.display = "block";
+  }
+});
+
 btnEnvoie.addEventListener("click", () => {
+  let isChecked = codeCheckbox.checked;
   let data = {
     montant: montant.value,
     fournisseur: fournisseur.value,
-    avec_code: true,
+    avec_code: isChecked,
     type: typeTransaction.value,
     numero_compte_desti: inputCompteDestinataire.value,
     permanent: false,

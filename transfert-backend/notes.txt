@@ -1,70 +1,53 @@
--Transfert
-    -Wave
-    -Orange Money
-         -Avec code
-         -Sans code
-    -Wari
-    -CB
-         -Permanent
-         -Immediat
-* Un transfert d'argent
-peut etre :
+- Transfert
+    - Wave
+    - Orange Money
+         - Avec code
+         - Sans code
+    - Wari
+    - CB
+         - Permanent
+         - Immediat
+* Un transfert d'argent peut etre :
 - depot
--Un retrait
--Un transfert compte vers compte
-* Tous des transfert d'argent nécentent  d'avoir
-un compte chez le fornisour cible sauf pour
-. Wari
-* Pour les transferts
-avec code, le destinataire
-n'a pas besoin avoir un compte, après la transaction, uncode de
-25 chffres sont generes.
-Ce code lui permet de retirer l'argent
-* Pour tous les depots, le client (celui qui depose) n'
-pas besoin d'avoir un compte
-il lui faut juste  un numero de telephone
-valide (existant dans la la base de donnees).
-Par contre, le destinataire doit forcement
-avoir un compte sauf pour  wari
+- Un retrait
+- Un transfert compte vers compte
+* Tous des transfert d'argent nécentent  d'avoir un compte chez le fornisour cible sauf pour Wari
+* Pour les transferts avec code, le destinataire n'a pas besoin avoir un compte, après la transaction, un code de 25 chffres sont generes. Ce code lui permet de retirer l'argent
+* Pour tous les depots, le client (celui qui depose) n'pas besoin d'avoir un compte il lui faut juste  un numero de telephone valide (existant dans la la base de donnees). 
+Par contre, le destinataire doit forcementavoir un compte sauf pour  wari
 * Les transferts se font qu'entre compte de même fournisseur
 (Par exemple: CB vers CB).
-* Un transfert Emmediat est un transfet qui dure que 24H. Il est automatiquement
-annulé si le destinatane ne retire pas l'argent dans les delais. Ce type de transfert aussi génere un code de 30 chiffe que le destinataire doit presenter.
+* Un transfert Immediat est un transfet qui dure que 24H. Il est automatiquement annulé si le destinatane ne retire pas l'argent dans les delais. 
+* Ce type de transfert aussi génere un code de 30 chiffe que le destinataire doit presenter.
 * Les depots chez wari génèrent un code de 15 chiffres.
 * Chaque compte est caracterisé par Un numero de compte et le solde
-* Si un client a un compte, alors son
-numero de compte est our ce format:
-XY_ NumerodeTelophone
-XY représente le forunisseur
-Voici la liste Pourles  fornisseur:
-Orange Money : OM
-Wave : WV
-Wari: WR
-C B: С В
-Exemple de compte: WV-771825414
-* Un client peut avoir plusieurs comptes
-mais pas chez
-: le même fournisseur.
+* Si un client a un compte, alors son numero de compte est our ce format:
+- XY_ NumerodeTelophone
+- XY représente le forunisseur
+- Voici la liste Pourles  fornisseur:
+- Orange Money : OM
+- Wave : WV
+- Wari: WR
+- CB: СВ
+(Exemple de compte: WV-771825414)
+* Un client peut avoir plusieurs comptes mais pas chez le même fournisseur.
 * Le montant minimum des transfert (debot ou transfert) est:
 -> 500 Pour Orange Money et Wave
 -> 1000 Pour Wari
 ->10.000 Pour CB
 + On ne peut envoyer un montont qui dépasse 1.000.000 sauf pour les compte
- Pour chaque transaction les frais sont:
-1% Pour Orange money et wave
- 2% Pour Wari
-5% Pour CB
-Clients, comptes et Transactions sont stockés dans une base de donnees dont les données sont accéssibles à travers une API faite parLaravel
-toutes les autres données sont stockés 
-que dans que dans une partie front faites avec typescript.
-En plus de projet BACK,  proposer un projet FRONT en
-typescript bien Structure avec une VUE tres simple pour Faire des transactions
-NB : les , client et leurs comptes sont deja
-crees dans la base de donnees par des Factories. Il n'y a pas de creation de compte Sur la Partie FRont.
-NB: on est au senegal les numero sont sous le format 77 ou 78 ou 75 ou 70 suivie de 7chiffres 
-exemple 77 123 45 67
-Et on doti avoir que 3 tables:
+* pour chaque transaction les frais sont:
+- 1% Pour Orange money et wave
+- 2% Pour Wari
+- 5% Pour CB
+* Clients, comptes et Transactions sont stockés dans une base de donnees dont les données sont accéssibles à travers une API faite parLaravel
+* toutes les autres données sont stockés que dans que dans une partie front faites avec typescript.
+* En plus de projet BACK,  proposer un projet FRONT en typescript bien Structure avec une VUE tres simple pour Faire des transactions
+
+* NB : les , client et leurs comptes sont deja crees dans la base de donnees par des Factories. Il n'y a pas de creation de compte Sur la Partie FRont.
+* NB: on est au senegal les numero sont sous le format 77 ou 78 ou 75 ou 70 suivie de 7chiffres 
+(exemple 77 123 45 67)
+* Et on doti avoir que 3 tables:
 Client,
 compte
 transaction.
-si tu as bien compris l'enoncée , je vais te poser des question et tu me repond d'accord ?

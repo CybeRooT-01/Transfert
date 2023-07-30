@@ -6,11 +6,28 @@ const btnEnvoie = document.querySelector(".btnSend");
 const typeTransaction = document.querySelector(".type");
 const fournisseur = document.querySelector(".fournisseur");
 const montant = document.querySelector(".montant");
+const destinataire = document.querySelector(".destinataireZone");
+const codeCheckbox = document.getElementById('codeCheckbox');
+// codeCheckbox.addEventListener('change', () => {
+//   const isChecked = codeCheckbox.checked;
+//   console.log(isChecked); 
+// });
+let typeTransactionValue = typeTransaction.value;
+typeTransaction.addEventListener("change", () => {
+    typeTransactionValue = typeTransaction.value;
+    if (typeTransactionValue === "retrait") {
+        destinataire.style.display = "none";
+    }
+    else {
+        destinataire.style.display = "block";
+    }
+});
 btnEnvoie.addEventListener("click", () => {
+    let isChecked = codeCheckbox.checked;
     let data = {
         montant: montant.value,
         fournisseur: fournisseur.value,
-        avec_code: true,
+        avec_code: isChecked,
         type: typeTransaction.value,
         numero_compte_desti: inputCompteDestinataire.value,
         permanent: false,

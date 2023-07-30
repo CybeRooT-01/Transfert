@@ -105,7 +105,7 @@ class CompteController extends Controller
             $frais = 0;
         }
       //transferer
-      if ($type == 'transfert') {
+      if ($type == 'transfert' || $type == 'depot') {
         $soldeEnvoyeur = $compteEnvoyeur->solde;
         $soleReceveur = $compteCible->solde;
         if ($soldeEnvoyeur < $montant + $frais) {
@@ -126,10 +126,23 @@ class CompteController extends Controller
             'permanent' => false,
         ]);
         return response()->json(['message' => "transfert effectué avec succes", 'frais' => $frais, 'code' => $codeTransaction], 200);
-      }elseif ($type == 'depot') {
-        //depot
       }elseif ($type =='retrait') {
-        //retrait
+        $soldeEnvoyeur = $compteEnvoyeur->solde;
+        if ($soldeEnvoyeur < $montant + $frais) {
+            return response()->json(['message' => "solde insuffisant"], 400);
+        };
+        $compteEnvoyeur->solde = $soldeEnvoyeur - $montant - $frais;
+        $compteEnvoyeur->save();
+        Transaction::create([
+            'montant' => $montant,
+            'frais' => $frais,
+            'code_transaction' => $codeTransaction,
+            'envoyeur_id' => $compteEnvoyeur->id,
+            'receveur_id' => null,
+            'type_transaction' => $type,
+            'date_transaction' => now(),
+            'permanent' => false,
+        ]);
       }
     }
 
