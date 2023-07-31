@@ -13,10 +13,9 @@
 - Un transfert compte vers compte
 * Tous des transfert d'argent nécentent  d'avoir un compte chez le fornisour cible sauf pour Wari
 * Pour les transferts avec code, le destinataire n'a pas besoin avoir un compte, après la transaction, un code de 25 chffres sont generes. Ce code lui permet de retirer l'argent
-* Pour tous les depots, le client (celui qui depose) n'pas besoin d'avoir un compte il lui faut juste  un numero de telephone valide (existant dans la la base de donnees). 
-Par contre, le destinataire doit forcementavoir un compte sauf pour  wari
-* Les transferts se font qu'entre compte de même fournisseur
-(Par exemple: CB vers CB).
+* Pour tous les depots, le client (celui qui depose) n'pas besoin d'avoir un compte il lui faut juste un numero de telephone valide (existant dans la la base de donnees). 
+* Par contre, le destinataire doit forcementavoir un compte sauf pour  wari
+* Les transferts se font qu'entre compte de même fournisseur * (Par exemple: CB vers CB).
 * Un transfert Immediat est un transfet qui dure que 24H. Il est automatiquement annulé si le destinatane ne retire pas l'argent dans les delais. 
 * Ce type de transfert aussi génere un code de 30 chiffe que le destinataire doit presenter.
 * Les depots chez wari génèrent un code de 15 chiffres.

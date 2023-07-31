@@ -23,13 +23,13 @@ class transfertPostRequest extends FormRequest
     {
         return [
             "montant"=> "required|numeric |max:1000000",
-            "fournisseur"=> "string| required| in:wave,orangemoney,wari,cb",
+            "fournisseur"=> "string| in:wave,orangemoney,wari,cb",
             "avec_code"=> "boolean",
             "type"=> "string| required | in:depot,retrait,transfert",
             "numero_telephone_destinataire" => "string",
             "numero_compte_desti"=> "string",
             "permanant"=> "boolean",
-            "envoyeur"=> "string | required",
+            "envoyeur"=> "string",
         ];
     }
     public function messages(): array

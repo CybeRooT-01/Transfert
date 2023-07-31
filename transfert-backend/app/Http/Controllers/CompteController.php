@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Client;
 use App\Models\Compte;
 use App\Models\Transaction;
@@ -9,263 +10,276 @@ use App\Http\Requests\transfertPostRequest;
 
 class CompteController extends Controller
 {
-    public function getClientByCompte($numeroCompte ){
-        $compte = Compte::where('numero_compte', $numeroCompte)->first();
-        $client = Client::find($compte->client_id);
-        if($client){
-            return response()->json($client, 200);
-        }else{
-            return response()->json(['message' => 'client introuvable'], 404);
+    private function traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible)
+    {
+        if (!$avecCode) {
+            $codeTransaction = $this->generateRandomcode(15);
+            $client = Client::where('numero_telephone', $NumclientEnvoyeur)->first();
+            if (!$client) {
+                return response()->json(['message' => 'il faut au moins un numero de telephone'], 400);
+            }
+            $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
+            $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
+            if ($fournisseurCible !== $fournisseurShort  || $fournisseurEnvoyeur !== $fournisseurShort) {
+                return response()->json(['message' => 'le depot wari ne peut se faire que sur un compte ' . $fournisseur], 400);
+            }
+            $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
+            if (!$compteCible) {
+                return response()->json(['message' => 'compte introuvable'], 400);
+            }
+            $compteCible->solde += $montant;
+            $compteCible->save();
+            Transaction::create([
+                'montant' => $montant,
+                'type_transaction' => $type,
+                'date_transaction' => Carbon::now(),
+                'envoyeur_id' => null,
+                'receveur_id' => $compteCible->id,
+                'frais' => $frais,
+                'permanent' => false,
+                'code_transaction' => $codeTransaction
+            ]);
+            return response()->json([
+                'message' => 'depot effectue avec succes',
+                'code' => $codeTransaction,
+                'frais' => $frais,
+            ], 200);
+        } else {
+            $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
+            if (!$compteEnvoyeur) {
+                return response()->json(['message' => 'compte envoyeur introuvable'], 400);
+            } else {
+                $montantTotal = $montant + $frais;
+                if ($compteEnvoyeur->solde < $montantTotal) {
+                    return response()->json(['message' => 'solde insuffisant'], 400);
+                }
+                $compteEnvoyeur->solde -= $montantTotal;
+                $codeTransaction = $this->generateRandomcode(25);
+                $compteEnvoyeur->save();
+                Transaction::create([
+                    'montant' => $montant,
+                    'type_transaction' => $type,
+                    'date_transaction' => Carbon::now(),
+                    'envoyeur_id' => $compteEnvoyeur->id,
+                    'receveur_id' => null,
+                    'frais' => $frais,
+                    'permanent' => false,
+                    'code_transaction' => $codeTransaction
+                ]);
+                return response()->json([
+                    'message' => 'depot effectue avec succes',
+                    'code' => $codeTransaction,
+                    'frais' => $frais,
+                ], 200);
+            }
         }
     }
+    private function traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort)
+    {
+        $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
+        $fournisseurEnvoyeur = strtolower($compteEnvoyeur->numero_compte[0] . $compteEnvoyeur->numero_compte[1]);
+        if ($fournisseurEnvoyeur !== $fournisseurShort) {
+            return response()->json(['message' => 'le retrait wari ne peut se faire que sur un compte' . $fournisseur], 400);
+        }
+        if (!$compteEnvoyeur) {
+            return response()->json(['message' => 'compte envoyeur introuvable'], 400);
+        }
+        $montantTotal = $montant + $frais;
+        if ($compteEnvoyeur->solde < $montantTotal) {
+            return response()->json(['message' => 'solde insuffisant'], 400);
+        }
+        if ($numeroCompteCible) {
+            return response()->json(['message' => "pas besoin d'un destinataire pour un retrait"], 400);
+        } else {
+            $codeTransaction = $this->generateRandomcode(15);
+            $compteEnvoyeur->solde -= $montantTotal;
+            $compteEnvoyeur->save();
+            Transaction::create([
+                'montant' => $montant,
+                'type_transaction' => $type,
+                'date_transaction' => Carbon::now(),
+                'envoyeur_id' => $compteEnvoyeur->id,
+                'receveur_id' => null,
+                'frais' => $frais,
+                'permanent' => false,
+                'code_transaction' => $codeTransaction
+            ]);
+            return response()->json([
+                'message' => 'retrait effectue avec succes',
+                'code' => $codeTransaction,
+                'frais' => $frais,
+            ], 200);
+        }
+    }
+    private function traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanant)
+    {
+        $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
+        $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
+        $fournisseurEnvoyeur = strtolower($compteEnvoyeur->numero_compte[0] . $compteEnvoyeur->numero_compte[1]);
+        $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
+        if ($fournisseurEnvoyeur !== $fournisseurCible) {
+            return response()->json(['message' => 'le transfert ne peut se faire que sur un compte ' . $fournisseur], 400);
+        }
+        if (!$compteEnvoyeur || !$compteCible) {
+            return response()->json(['message' => 'compte introuvable'], 400);
+        }
+
+        if ($fournisseur == 'wari' && ($fournisseurEnvoyeur != 'wr')) {
+            return response()->json(['message' => 'le fournisseur wari ne peut effectuer que des transferts entre comptes wari'], 400);
+        } else if ($fournisseur == 'cb' && $fournisseurEnvoyeur != 'cb') {
+            return response()->json(['message' => 'le fournisseur carte bancaire ne peut effectuer que des transferts entre comptes carte bancaire'], 400);
+        } else if ($fournisseur == 'orangemoney' && ($fournisseurEnvoyeur != 'om')) {
+            return response()->json(['message' => 'le fournisseur orange money ne peut effectuer que des transferts entre comptes orange money'], 400);
+        } else if ($fournisseur == 'wave' && ($fournisseurEnvoyeur != 'wv')) {
+            return response()->json(['message' => 'le fournisseur wave ne peut effectuer que des transferts entre comptes wave'], 400);
+        }
+        $montantTotal = $montant + $frais;
+
+
+        if ($permanant === false && $fournisseur == 'cb') {
+            $dateActuelle = Carbon::now();
+            $codeTransaction = $this->generateRandomcode(30);
+            $compteEnvoyeur->solde -= $montantTotal;
+            $compteCible->solde += $montant;
+            $dateExpiration = Carbon::now()->addHours(24)->toDateTimeString();
+            $compteEnvoyeur->save();
+            $compteCible->save();
+            Transaction::create([
+                'montant' => $montant,
+                'type_transaction' => $type,
+                'date_transaction' => Carbon::now(),
+                'envoyeur_id' => $compteEnvoyeur->id,
+                'receveur_id' => $compteCible->id,
+                'frais' => $frais,
+                'permanent' => true,
+                'code_transaction' => $codeTransaction,
+                'date_expiration' => $dateExpiration
+            ]);
+
+            if ($dateActuelle->diffInHours($dateExpiration) > 24) {
+                $compteEnvoyeur->solde += $montantTotal;
+                $compteCible->solde -= $montant;
+                $compteEnvoyeur->save();
+                $compteCible->save();
+                Transaction::where('code_transaction', $codeTransaction)->delete();
+                return response()->json(['message' => "le transfert n'est plus valide"], 400);
+            }
+            return response()->json([
+                'message' => 'transfert permanent effectue avec succes',
+                'code' => $codeTransaction,
+                'frais' => $frais,
+                'date_expiration' => $dateExpiration
+            ]);
+        } elseif($permanant === false && $fournisseur != 'cb') {
+            return response()->json(['message' => "immediat ne peut etre que sur un compte cb"], 400);
+        }
+        $compteEnvoyeur->solde -= $montantTotal;
+        $compteCible->solde += $montant;
+        $codeTransaction = $this->generateRandomcode(15);
+        $compteEnvoyeur->save();
+        $compteCible->save();
+        Transaction::create([
+            'montant' => $montant,
+            'type_transaction' => $type,
+            'date_transaction' => Carbon::now(),
+            'envoyeur_id' => $compteEnvoyeur->id,
+            'receveur_id' => $compteCible->id,
+            'frais' => $frais,
+            'permanent' => false,
+            'code_transaction' => $codeTransaction
+        ]);
+        return response()->json([
+            'message' => 'transfert effectue avec succes',
+            'code' => $codeTransaction,
+            'frais' => $frais,
+        ], 200);
+    }
+    private function transfertNonReconnu()
+    {
+        return response()->json(['message' => 'transfert non reconnu'], 400);
+    }
+
+
     public function transaction(transfertPostRequest $request)
     {
         $type = $request->input('type');
         $montant = $request->input('montant');
-        $fournisseur = $request->input('fournisseur');
-        $envoyeur = $request->input('envoyeur');
-        //si le compte existe
-        $compteEnvoyeur = Compte::where('numero_compte', $envoyeur)->first();
-        if (!$compteEnvoyeur) {
-            return response()->json(['message' => 'compte introuvable']);
-        }
-        switch ($fournisseur) {
-            case 'cb':
-                if ($montant < 10000) {
-                    return response()->json(['message' => 'Le montant minimum est de 10000'], 400);
-                }
-                break;
-            case 'wari':
-                if ($montant < 1000) {
-                    return response()->json(['message' => 'Le montant minimum est de 1000'], 400);
-                }
-                break;
-            case 'wave' || 'orangemoney':
-                if ($montant < 500) {
-                    return response()->json(['message' => 'Le montant minimum est de 500'], 400);
-                }
-                break;
-            default:
-                return response()->json(['message' => 'Fournisseur non pris en charge'], 400);
-                break;
-        }
-        //gerer les code
         $avecCode = $request->input('avec_code');
-        $codeTransaction = null;
-        if ($avecCode) {
-            if ($type == 'transfert') {
-                $codeTransaction = $this->generateRandomcode(25);
-            } elseif ($type == 'depot') {
-                $codeTransaction = $this->generateRandomcode(15);
-            } else {
-                return response()->json(['message' => "code de transaction est non requis pour les transaction sans code"], 400);
-            }
-        }
-        // return $codeTransaction;
-        //l'envoyeur
-        $numeroCompteEnvoyeur = $compteEnvoyeur->numero_compte;
-        $fournisseurEnvoyeur = strtolower($numeroCompteEnvoyeur[0].$numeroCompteEnvoyeur[1]);
-        //le receveur
+        $fournisseur = $request->input('fournisseur');
+        $numCompteenvoyeur = $request->input('numCompteEnvoyeur');
         $numeroCompteCible = $request->input('numero_compte_desti');
-        $fournisseurCible = strtolower($numeroCompteCible[0].$numeroCompteCible[1]);
-        $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
-
-        //gerer les transfert compte a combte b truc machin bidule
-        if ($type == 'transfert') {
-            if ($compteCible == null) {
-                return response()->json(['message' => "compte introuvable"], 404);
-            }
-            if ($fournisseurCible =='cb' && $fournisseur != 'cb') {
-                return response()->json(['message' => "Le compte cible doit être un compte bancaire"], 400);
-            }elseif($fournisseurCible =='wr' && $fournisseur != 'wari'){
-                return response()->json(['message' => "Le compte cible doit être un compte wari"], 400);
-            }elseif($fournisseurCible =='om' && $fournisseur != 'orangemoney'){
-                return response()->json(['message' => "Le compte cible doit être un compte orangemoney"], 400);
-            }elseif($fournisseurCible =='wv' && $fournisseur != 'wave'){
-                return response()->json(['message' => "Le compte cible doit être un compte wave"], 400);
-            }
-            if($fournisseurEnvoyeur != $fournisseurCible){
-                return response()->json(['message' => "Le recepteur doit etre du meme fournisseur que l'envoyeur"], 400);
-            }
-        }
-        //gerer les frais
+        $NumclientEnvoyeur = $request->input('numTelEnvoyeur');
+        $permanent = $request->input('permanant');
         $frais = 0;
         switch ($fournisseur) {
             case 'orangemoney':
             case 'wave':
-                $frais = $montant *0.01;
+                $frais = $montant * 0.01;
                 break;
             case 'wari':
                 $frais = $montant * 0.02;
                 break;
             case 'cb':
-               $frais = $montant * 0.05;
+                $frais = $montant * 0.05;
                 break;
             default:
-            $frais = 0;
+                $frais = 0;
         }
-      //transferer
-      if ($type == 'transfert' || $type == 'depot') {
-        $soldeEnvoyeur = $compteEnvoyeur->solde;
-        $soleReceveur = $compteCible->solde;
-        if ($soldeEnvoyeur < $montant + $frais) {
-            return response()->json(['message' => "solde insuffisant"], 400);
+        if ($fournisseur === 'wari') {
+            $fournisseurShort = 'wr';
+            $permanent = true;
+            if ($type == 'depot') {
+                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+            } elseif ($type == 'retrait') {
+                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+            } elseif ($type === "transfert") {
+                return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
+            } else {
+                return $this->transfertNonReconnu();
+            }
+        } elseif ($fournisseur === 'orangemoney') {
+            $fournisseurShort = 'om';
+            $permanent = true;
+            if ($type == 'depot') {
+                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+            } elseif ($type == 'retrait') {
+                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+            } elseif ($type === "transfert") {
+                return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
+            } else {
+                return $this->transfertNonReconnu();
+            }
+        } elseif ($fournisseur === 'wave') {
+            $fournisseurShort = 'wv';
+            $permanent = true;
+            if ($type == 'depot') {
+                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+            } elseif ($type == 'retrait') {
+                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+            } elseif ($type === "transfert") {
+                return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
+            } else {
+                return $this->transfertNonReconnu();
+            }
+        } elseif ($fournisseur === 'cb') {
+            $fournisseurShort = 'cb';
+            if ($type == 'depot') {
+                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+            } elseif ($type == 'retrait') {
+                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+            } elseif ($type === "transfert") {
+                return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
+            }
         }
-        $compteEnvoyeur->solde = $soldeEnvoyeur - $montant - $frais;
-        $compteCible->solde = $soleReceveur + $montant;
-        $compteEnvoyeur->save();
-        $compteCible->save();
-        Transaction::create([
-            'montant' => $montant,
-            'frais' => $frais,
-            'code_transaction' => $codeTransaction,
-            'envoyeur_id' => $compteEnvoyeur->id,
-            'receveur_id' => $compteCible->id,
-            'type_transaction' => $type,
-            'date_transaction' => now(),
-            'permanent' => false,
-        ]);
-        return response()->json(['message' => "transfert effectué avec succes", 'frais' => $frais, 'code' => $codeTransaction], 200);
-      }elseif ($type =='retrait') {
-        $soldeEnvoyeur = $compteEnvoyeur->solde;
-        if ($soldeEnvoyeur < $montant + $frais) {
-            return response()->json(['message' => "solde insuffisant"], 400);
-        };
-        $compteEnvoyeur->solde = $soldeEnvoyeur - $montant - $frais;
-        $compteEnvoyeur->save();
-        Transaction::create([
-            'montant' => $montant,
-            'frais' => $frais,
-            'code_transaction' => $codeTransaction,
-            'envoyeur_id' => $compteEnvoyeur->id,
-            'receveur_id' => null,
-            'type_transaction' => $type,
-            'date_transaction' => now(),
-            'permanent' => false,
-        ]);
-      }
     }
 
-    // public function transaction($id, transfertPostRequest $request)
-    // {
-    //     $type = $request->input('type');
-    //     $montant = $request->input('montant');
-    //     $fournisseur = $request->input('fournisseur');
-    //     //si le compte existe
-    //     $compteEnvoyeur = Compte::find($id);
-    //     if (!$compteEnvoyeur) {
-    //         return response()->json(['message' => 'compte introuvable']);
-    //     }
-    //     switch ($fournisseur) {
-    //         case 'cb':
-    //             if ($montant < 10000) {
-    //                 return response()->json(['message' => 'Le montant minimum est de 10000'], 400);
-    //             }
-    //             break;
-    //         case 'wari':
-    //             if ($montant < 1000) {
-    //                 return response()->json(['message' => 'Le montant minimum est de 1000'], 400);
-    //             }
-    //             break;
-    //         case 'wave' || 'orangemoney':
-    //             if ($montant < 500) {
-    //                 return response()->json(['message' => 'Le montant minimum est de 500'], 400);
-    //             }
-    //             break;
-    //         default:
-    //             return response()->json(['message' => 'Fournisseur non pris en charge'], 400);
-    //             break;
-    //     }
-    //     //gerer les code
-    //     $avecCode = $request->input('avec_code');
-    //     $codeTransaction = null;
-    //     if ($avecCode) {
-    //         if ($type == 'transfert') {
-    //             $codeTransaction = $this->generateRandomcode(25);
-    //         } elseif ($type == 'depot') {
-    //             $codeTransaction = $this->generateRandomcode(15);
-    //         } else {
-    //             return response()->json(['message' => "code de transaction est non requis pour les transaction sans code"], 400);
-    //         }
-    //     }
-    //     // return $codeTransaction;
-    //     //l'envoyeur
-    //     $numeroCompteEnvoyeur = $compteEnvoyeur->numero_compte;
-    //     $fournisseurEnvoyeur = strtolower($numeroCompteEnvoyeur[0].$numeroCompteEnvoyeur[1]);
-    //     //le receveur
-    //     $numeroCompteCible = $request->input('numero_compte_desti');
-    //     $fournisseurCible = strtolower($numeroCompteCible[0].$numeroCompteCible[1]);
-    //     $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
-
-    //     //gerer les transfert compte a combte b truc machin bidule
-    //     if ($type == 'transfert') {
-    //         if ($compteCible == null) {
-    //             return response()->json(['message' => "compte introuvable"], 404);
-    //         }
-    //         if ($fournisseurCible =='cb' && $fournisseur != 'cb') {
-    //             return response()->json(['message' => "Le compte cible doit être un compte bancaire"], 400);
-    //         }elseif($fournisseurCible =='wr' && $fournisseur != 'wari'){
-    //             return response()->json(['message' => "Le compte cible doit être un compte wari"], 400);
-    //         }elseif($fournisseurCible =='om' && $fournisseur != 'orangemoney'){
-    //             return response()->json(['message' => "Le compte cible doit être un compte orangemoney"], 400);
-    //         }elseif($fournisseurCible =='wv' && $fournisseur != 'wave'){
-    //             return response()->json(['message' => "Le compte cible doit être un compte wave"], 400);
-    //         }
-    //         if($fournisseurEnvoyeur != $fournisseurCible){
-    //             return response()->json(['message' => "Le recepteur doit etre du meme fournisseur que l'envoyeur"], 400);
-    //         }
-    //     }
-    //     //gerer les frais
-    //     $frais = 0;
-    //     switch ($fournisseur) {
-    //         case 'orangemoney':
-    //         case 'wave':
-    //             $frais = $montant *0.01;
-    //             break;
-    //         case 'wari':
-    //             $frais = $montant * 0.02;
-    //             break;
-    //         case 'cb':
-    //            $frais = $montant * 0.05;
-    //             break;
-    //         default:
-    //         $frais = 0;
-    //     }
-    //   //transferer
-    //   if ($type == 'transfert') {
-    //     $soldeEnvoyeur = $compteEnvoyeur->solde;
-    //     $soleReceveur = $compteCible->solde;
-    //     if ($soldeEnvoyeur < $montant + $frais) {
-    //         return response()->json(['message' => "solde insuffisant"], 400);
-    //     }
-    //     $compteEnvoyeur->solde = $soldeEnvoyeur - $montant - $frais;
-    //     $compteCible->solde = $soleReceveur + $montant;
-    //     $compteEnvoyeur->save();
-    //     $compteCible->save();
-    //     Transaction::create([
-    //         'montant' => $montant,
-    //         'frais' => $frais,
-    //         'code_transaction' => $codeTransaction,
-    //         'envoyeur_id' => $compteEnvoyeur->id,
-    //         'receveur_id' => $compteCible->id,
-    //         'type_transaction' => $type,
-    //         'date_transaction' => now(),
-    //         'permanent' => false,
-    //     ]);
-    //     return response()->json(['message' => "transfert effectué avec succes", 'frais' => $frais, 'code' => $codeTransaction], 200);
-    //   }elseif ($type == 'depot') {
-    //     //depot
-    //   }elseif ($type =='retrait') {
-    //     //retrait
-    //   }
-    // }
-
-    private function generateRandomcode($longueur){
+    private function generateRandomcode($longueur)
+    {
         $code = '';
         $chaine = '1234567890';
         $longueurChaine = strlen($chaine);
-        for ($i=0; $i < $longueur; $i++) {
-            $code.=$chaine[random_int(0, $longueurChaine - 1)];
+        for ($i = 0; $i < $longueur; $i++) {
+            $code .= $chaine[random_int(0, $longueurChaine - 1)];
         }
         return $code;
     }
