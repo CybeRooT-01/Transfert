@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::get('/clients', [ClientController::class, 'index']);
-Route::get('/clients/{id}', [ClientController::class, 'show'] );
+Route::get('/clients/{id}/transaction', [ClientController::class, 'getclientsTransaction'] );
 Route::get('/clients/{id}/compte',[ClientController::class,'getCompteByClient']);
 // Route::post('/compte/{idCompte}/transaction', [CompteController::class, 'transaction']);
 Route::post('/transaction', [CompteController::class, 'transaction']);

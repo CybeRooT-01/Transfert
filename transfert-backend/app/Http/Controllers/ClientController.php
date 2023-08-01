@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\transfertPostRequest;
-use App\Http\Resources\ClientRessource;
 use App\Models\Client;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\ClientRessource;
+use App\Http\Requests\transfertPostRequest;
 
 class ClientController extends Controller
 {
@@ -30,10 +31,19 @@ class ClientController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function getclientsTransaction(string $id)
     {
-        $client = Client::find($id);
-        return $client ?? response()->json(['message'=>'Client Introuvable'], Response::HTTP_NOT_FOUND);
+        $transactions = Transaction::where('envoyeur_id', $id)->get();
+        $transactions = $transactions->map(function($transaction){
+            return [
+                'type_transaction' => $transaction->type_transaction,
+                'montant' => $transaction->montant,
+                'date_transaction' => $transaction->date_transaction,
+                'frais' => $transaction->frais,
+                'date_expiration' => $transaction->date_expiration,
+            ];
+        });
+        return $transactions;
     }
 
     public function getCompteByClient($id){
@@ -43,6 +53,9 @@ class ClientController extends Controller
         }else{
             return response()->json(['message'=>'Client Introuvable'], Response::HTTP_NOT_FOUND);
         }
+    }
+    public function getTransactionsByClient($clientName){
+
     }
     /**
      * Update the specified resource in storage.

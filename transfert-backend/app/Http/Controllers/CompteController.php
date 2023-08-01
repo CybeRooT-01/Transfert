@@ -10,6 +10,20 @@ use App\Http\Requests\transfertPostRequest;
 
 class CompteController extends Controller
 {
+
+    private function checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible,$fournisseur){
+        // $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
+        $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
+        if ($fournisseur == 'wari' && ($fournisseurEnvoyeur != 'wr')) {
+            return response()->json(['message' => 'le fournisseur wari ne peut effectuer que des transferts entre comptes wari'], 400);
+        } elseif ($fournisseur == 'cb' && $fournisseurEnvoyeur != 'cb') {
+            return response()->json(['message' => 'le fournisseur carte bancaire ne peut effectuer que des transferts entre comptes carte bancaire'], 400);
+        } elseif ($fournisseur == 'orangemoney' && ($fournisseurEnvoyeur != 'om')) {
+            return response()->json(['message' => 'le fournisseur orange money ne peut effectuer que des transferts entre comptes orange money'], 400);
+        } elseif ($fournisseur == 'wave' && ($fournisseurEnvoyeur != 'wv')) {
+            return response()->json(['message' => 'le fournisseur wave ne peut effectuer que des transferts entre comptes wave'], 400);
+        }
+    }
     private function traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible)
     {
         if (!$avecCode) {
@@ -20,9 +34,15 @@ class CompteController extends Controller
             }
             $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
             $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
+
             if ($fournisseurCible !== $fournisseurShort  || $fournisseurEnvoyeur !== $fournisseurShort) {
-                return response()->json(['message' => 'le depot wari ne peut se faire que sur un compte ' . $fournisseur], 400);
+                return response()->json(['message' => 'le depot '.$fournisseur.' ne peut se faire que sur un compte ' . $fournisseur], 400);
             }
+           $data =  $this->checkEnvoyabilite($numCompteenvoyeur,$numeroCompteCible,$fournisseur);
+           if ($data != null) {
+            return $data;
+           }
+
             $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
             if (!$compteCible) {
                 return response()->json(['message' => 'compte introuvable'], 400);
@@ -46,6 +66,10 @@ class CompteController extends Controller
             ], 200);
         } else {
             $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
+            $data = $this->checkEnvoyabilite($numCompteenvoyeur,$numeroCompteCible,$fournisseur);
+            if($data != null){
+                return $data;
+            }
             if (!$compteEnvoyeur) {
                 return response()->json(['message' => 'compte envoyeur introuvable'], 400);
             } else {
@@ -53,6 +77,7 @@ class CompteController extends Controller
                 if ($compteEnvoyeur->solde < $montantTotal) {
                     return response()->json(['message' => 'solde insuffisant'], 400);
                 }
+                
                 $compteEnvoyeur->solde -= $montantTotal;
                 $codeTransaction = $this->generateRandomcode(25);
                 $compteEnvoyeur->save();
@@ -79,7 +104,7 @@ class CompteController extends Controller
         $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
         $fournisseurEnvoyeur = strtolower($compteEnvoyeur->numero_compte[0] . $compteEnvoyeur->numero_compte[1]);
         if ($fournisseurEnvoyeur !== $fournisseurShort) {
-            return response()->json(['message' => 'le retrait wari ne peut se faire que sur un compte' . $fournisseur], 400);
+            return response()->json(['message' => 'le retrait '.$fournisseur.' ne peut se faire que sur un compte ' . $fournisseur], 400);
         }
         if (!$compteEnvoyeur) {
             return response()->json(['message' => 'compte envoyeur introuvable'], 400);
@@ -88,6 +113,7 @@ class CompteController extends Controller
         if ($compteEnvoyeur->solde < $montantTotal) {
             return response()->json(['message' => 'solde insuffisant'], 400);
         }
+
         if ($numeroCompteCible) {
             return response()->json(['message' => "pas besoin d'un destinataire pour un retrait"], 400);
         } else {
@@ -123,16 +149,11 @@ class CompteController extends Controller
         if (!$compteEnvoyeur || !$compteCible) {
             return response()->json(['message' => 'compte introuvable'], 400);
         }
-
-        if ($fournisseur == 'wari' && ($fournisseurEnvoyeur != 'wr')) {
-            return response()->json(['message' => 'le fournisseur wari ne peut effectuer que des transferts entre comptes wari'], 400);
-        } else if ($fournisseur == 'cb' && $fournisseurEnvoyeur != 'cb') {
-            return response()->json(['message' => 'le fournisseur carte bancaire ne peut effectuer que des transferts entre comptes carte bancaire'], 400);
-        } else if ($fournisseur == 'orangemoney' && ($fournisseurEnvoyeur != 'om')) {
-            return response()->json(['message' => 'le fournisseur orange money ne peut effectuer que des transferts entre comptes orange money'], 400);
-        } else if ($fournisseur == 'wave' && ($fournisseurEnvoyeur != 'wv')) {
-            return response()->json(['message' => 'le fournisseur wave ne peut effectuer que des transferts entre comptes wave'], 400);
+        $data = $this->checkEnvoyabilite($numCompteenvoyeur,$numeroCompteCible,$fournisseur);
+        if ($data != null) {
+            return $data;
         }
+        
         $montantTotal = $montant + $frais;
 
 
@@ -225,6 +246,7 @@ class CompteController extends Controller
             default:
                 $frais = 0;
         }
+        
         if ($fournisseur === 'wari') {
             $fournisseurShort = 'wr';
             $permanent = true;
@@ -282,5 +304,16 @@ class CompteController extends Controller
             $code .= $chaine[random_int(0, $longueurChaine - 1)];
         }
         return $code;
+    }
+
+    public function getClientByCompte($idCompte){
+        $idCompte = Compte::where('numero_compte', $idCompte)->first();
+        $idClient = $idCompte->client_id;
+        $client = Client::where('id', $idClient)->first();
+        return response()->json([
+            'nom'=>$client->nom,
+            'prenom'=>$client->prenom,
+            'id'=>$client->id
+        ]);
     }
 }
