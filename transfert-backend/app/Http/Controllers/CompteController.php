@@ -23,7 +23,7 @@ class CompteController extends Controller
         }
         $compte = Compte::where('numero_compte', $numCompte)->where('statut', 1)->first();
         if(!$compte){
-            return response()->json(['message' => 'Compte Introuvable.'], 404);
+            return response()->json(['message' => "Ce compte n'existe pas."], 404);
         }
         $compte->statut = 0;
         $compte->raison_de_fermeture = $raison;

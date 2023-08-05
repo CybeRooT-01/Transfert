@@ -179,12 +179,12 @@ const btnFermerCompte = document.querySelector(".fermerCompte");
 btnFermerCompte.addEventListener("click", () => {
     let data = {
         numero_compte: numeroCompteToClose.value,
-        raison: raisonsDeFermeture.value,
+        raisons: raisonsDeFermeture.value,
     };
     // console.log(data);
     let url = "http://127.0.0.1:8000/api/compte/fermer";
     fetch(url, {
-        method: "POST",
+        method: "PUT",
         body: JSON.stringify(data),
         headers: {
             "Content-Type": "application/json",
