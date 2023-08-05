@@ -9,6 +9,7 @@ const montant = document.querySelector(".montant");
 const destinataire = document.querySelector(".destinataireZone");
 const codeCheckbox = document.getElementById("codeCheckbox");
 const modalHistorique = document.querySelector("#transactionHistoryList");
+const toBeColored = document.querySelector(".toBeColored");
 let typeTransactionValue = typeTransaction.value;
 typeTransaction.addEventListener("change", () => {
     typeTransactionValue = typeTransaction.value;
@@ -117,3 +118,81 @@ function closeCode() {
 }
 configureInputCompte(inputCompteExpediteur, nomExpediteur);
 configureInputCompte(inputCompteDestinataire, nomDestinataire);
+// ajouter un client
+const nomClient = document.querySelector("#clientLastName");
+const prenomClient = document.querySelector("#clientFirstName");
+const telephoneClient = document.querySelector("#clientPhoneNumber");
+const btnAjouterClient = document.querySelector(".saveClient");
+btnAjouterClient.addEventListener("click", () => {
+    let data = {
+        nom: nomClient.value,
+        prenom: prenomClient.value,
+        numero_telephone: telephoneClient.value,
+    };
+    const url = "http://127.0.0.1:8000/api/clients/create";
+    fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+    })
+        .then((response) => response.json())
+        .then((datas) => {
+        console.log(datas);
+        showNotification(`${datas.message}`);
+    });
+});
+function validatePhoneNumber(phoneNumber) {
+    const phoneNumberPattern = /^(77|70|78|75|76)\d{7}$/;
+    return phoneNumberPattern.test(phoneNumber);
+}
+// creation compte
+const numeroTel = document.querySelector("#accountNumber");
+const typeCompte = document.querySelector("#accountType");
+const btnCreerCompte = document.querySelector(".ouvrirCompte");
+btnCreerCompte.addEventListener("click", () => {
+    let data = {
+        numero_telephone: numeroTel.value,
+        fournisseur: typeCompte.value,
+    };
+    // console.log(data);
+    let url = "http://127.0.0.1:8000/api/compte/create";
+    fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+    })
+        .then((response) => response.json())
+        .then((datas) => {
+        showNotification(`${datas.message}`);
+    });
+});
+//fermer compte
+const numeroCompteToClose = document.querySelector("#accountNumberToClose");
+const raisonsDeFermeture = document.querySelector("#closingReason");
+const btnFermerCompte = document.querySelector(".fermerCompte");
+btnFermerCompte.addEventListener("click", () => {
+    let data = {
+        numero_compte: numeroCompteToClose.value,
+        raison: raisonsDeFermeture.value,
+    };
+    // console.log(data);
+    let url = "http://127.0.0.1:8000/api/compte/fermer";
+    fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+    })
+        .then((response) => response.json())
+        .then((datas) => {
+        showNotification(`${datas.message}`);
+    });
+});

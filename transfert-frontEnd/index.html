@@ -24,7 +24,28 @@
     <div class="container mt-5">
       <h1>Application De Transfert</h1>
       <div class="mb-3">
-        <h3>Expediteur</h3>
+        <h3 class="toBeColored">Expediteur</h3>
+        <div class="d-flex justify-content-around mt-3">
+          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addClientModal">
+            Ajouter Client
+          </button>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#openAccountModal">
+            Ouvrir Compte
+          </button>
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#closeAccountModal">
+            Fermer Compte
+          </button>
+          <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#toggleAccountStatusModal">
+            Bloquer/Débloquer Compte
+          </button>
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelTransactionModal">
+            Annuler Transaction
+          </button>
+        </div>
+        
+        
+      
+                    
         <hr />
         <div class="row">
           <div class="col-md-6">
@@ -158,23 +179,162 @@
     </div>
 
     <!-- modal qui s'affiche quand on clique sur le bouton i -->
-    <div class="modal fade" id="transactionHistoryModal" tabindex="-1" aria-labelledby="transactionHistoryModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-scrollable modal-dark" style="max-width: 60%;">
+    <div
+      class="modal fade"
+      id="transactionHistoryModal"
+      tabindex="-1"
+      aria-labelledby="transactionHistoryModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-dialog-scrollable modal-dark"
+        style="max-width: 60%"
+      >
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="transactionHistoryModalLabel">
               Historique des transactions
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fermer"
+            ></button>
           </div>
           <div class="modal-body">
-            <div id="transactionHistoryList">
-              <!-- Les transactions seront ajoutées ici depuis TypeScript -->
-            </div>
+            <div id="transactionHistoryList"></div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- modal ajouter client -->
+    <div class="modal fade" id="addClientModal" tabindex="-1" aria-labelledby="addClientModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addClientModalLabel">Ajouter Client</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="clientFirstName" class="form-label">Prénom</label>
+                <input type="text" class="form-control" id="clientFirstName" placeholder="Prénom du client" required>
+              </div>
+              <div class="mb-3">
+                <label for="clientLastName" class="form-label">Nom</label>
+                <input type="text" class="form-control" id="clientLastName" placeholder="Nom du client" required>
+              </div>
+              <div class="mb-3">
+                <label for="clientPhoneNumber" class="form-label">Numéro de téléphone</label>
+                <input type="tel" class="form-control" id="clientPhoneNumber" placeholder="Numéro de téléphone du client" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fermer
+            </button>
+            <button type="button" class="btn btn-primary saveClient">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- modal ouverture de compte -->
+    <div class="modal fade" id="openAccountModal" tabindex="-1" aria-labelledby="openAccountModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="openAccountModalLabel">Ouvrir un Compte</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="accountNumber" class="form-label">Numéro de Telephone</label>
+                <input type="text" class="form-control" id="accountNumber" placeholder="Numéro de Telephone" required>
+              </div>
+              <div class="mb-3">
+                <label for="accountType" class="form-label">Fournisseur</label>
+                <select class="form-select" id="accountType" required>
+                  <option value="" selected disabled>Choisissez le type de fournisseur</option>
+                  <option value="wave">wave</option>
+                  <option value="orangemoney">Orange Money</option>
+                  <option value="wari">Wari</option>
+                  <option value="cb">Compte Bancaire</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Annuler
+            </button>
+            <button type="button" class="btn btn-primary ouvrirCompte">Ouvrir Compte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- fermeture de compte -->
+    <div class="modal fade" id="closeAccountModal" tabindex="-1" aria-labelledby="closeAccountModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="closeAccountModalLabel">Fermer un Compte</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="accountNumberToClose" class="form-label">Numéro de Compte à Fermer</label>
+                <input type="text" class="form-control" id="accountNumberToClose" placeholder="Numéro de Compte à Fermer" required>
+              </div>
+              <div class="mb-3">
+                <label for="closingReason" class="form-label">Raison de Fermeture</label>
+                <textarea class="form-control" id="closingReason" rows="3" placeholder="Raison de la fermeture du compte" required></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Annuler
+            </button>
+            <button type="button" class="btn btn-danger fermerCompte">Fermer Compte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    
     
 
     <script src="./dist/transaction.js"></script>

@@ -146,3 +146,18 @@ hr {
   display: inline-block;
   text-align: center;
 }
+.wave{
+  background-color: skyblue
+}
+.om{
+  background-color: orange;
+  color: black;
+}
+.wari{
+  background-color: #00ff00;
+  color: black;
+}
+.cb{
+  background-color: yellow;
+  color: black;
+}

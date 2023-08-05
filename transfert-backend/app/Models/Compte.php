@@ -19,6 +19,6 @@ class Compte extends Model
         'numero_compte',
         'solde',
         'client_id',
-        'fourisseur'
+        'fournisseur'
     ];
 }

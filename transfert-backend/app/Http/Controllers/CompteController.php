@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CompteCloseRequest;
+use App\Http\Requests\ComptePostRequest;
 use Carbon\Carbon;
 use App\Models\Client;
 use App\Models\Compte;
@@ -10,9 +12,73 @@ use App\Http\Requests\transfertPostRequest;
 
 class CompteController extends Controller
 {
+    public function fermerCompte(CompteCloseRequest $request){
+        $numCompte = $request->numero_compte;
+        $raison = $request->raisons;
+        $grosMots = ['con','merde','putain','batard','pd','encule','enculé','chier', 'shit'];
+        foreach ($grosMots as $mot) {
+            if (stripos($raison, $mot) !== false) {
+                return response()->json(['message' => 'Les raisons contiennent des mots interdits.'], 400);
+            }
+        }
+        $compte = Compte::where('numero_compte', $numCompte)->where('statut', 1)->first();
+        if(!$compte){
+            return response()->json(['message' => 'Compte Introuvable.'], 404);
+        }
+        $compte->statut = 0;
+        $compte->raison_de_fermeture = $raison;
+        $compte->save();
+        return response()->json([
+            'message' => 'Compte fermé avec succées.',
+            'compte'=>$compte
+        ]);
+    }
 
-    private function checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible,$fournisseur){
-        // $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
+    public function store(ComptePostRequest $request)
+    {
+        $numTel = $request->numero_telephone;
+        $fournisseur = $request->fournisseur;
+        $regex = "/^(77|78|76|75|70)[0-9]{7}$/";
+        if (!preg_match($regex, $numTel)) {
+            return response()->json(['message' => 'Le numero de telephone doit contenir 9 chiffres et doit commencer par 77,78,76,75,70'], 400);
+        }
+        $client = Client::where('numero_telephone', $numTel)->first();
+        if (!$client) {
+            return response()->json(['message' => "Ce client n'existe pas, veillez d'abord l'inscrire "], 400);
+        }
+        $numCompte = $this->createNumCompte($numTel, $fournisseur);
+        $compte = Compte::where('client_id', $client->id)->where('statut', 1)->first();
+        if ($compte) {
+            return response()->json(['message' => 'Ce numero a deja un compte chez ce fournisseur'], 400);
+        }
+        Compte::create([
+            'numero_compte' => $numCompte,
+            'client_id' => $client->id,
+            'solde' => 0,
+            'fournisseur' => $fournisseur,
+        ]);
+        return response()->json([
+            'message' => 'Compte cree avec succes',
+            'numero_compte' => $numCompte,
+        ], 201);
+    }
+    private function createNumCompte(String $numeroCompte, String $fournisseur)
+    {
+        if ($fournisseur == 'wari') {
+            $numeroCompte = 'WR-' . $numeroCompte;
+        } elseif ($fournisseur == 'cb') {
+            $numeroCompte = 'CB-' . $numeroCompte;
+        } elseif ($fournisseur == 'orangemoney') {
+            $numeroCompte = 'OM-' . $numeroCompte;
+        } elseif ($fournisseur == 'wave') {
+            $numeroCompte = 'WV-' . $numeroCompte;
+        }
+        return $numeroCompte;
+    }
+
+    private function checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur)
+    {
+        $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
         $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
         if ($fournisseur == 'wari' && ($fournisseurEnvoyeur != 'wr')) {
             return response()->json(['message' => 'le fournisseur wari ne peut effectuer que des transferts entre comptes wari'], 400);
@@ -36,12 +102,12 @@ class CompteController extends Controller
             $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
 
             if ($fournisseurCible !== $fournisseurShort  || $fournisseurEnvoyeur !== $fournisseurShort) {
-                return response()->json(['message' => 'le depot '.$fournisseur.' ne peut se faire que sur un compte ' . $fournisseur], 400);
+                return response()->json(['message' => 'le depot ' . $fournisseur . ' ne peut se faire que sur un compte ' . $fournisseur], 400);
             }
-           $data =  $this->checkEnvoyabilite($numCompteenvoyeur,$numeroCompteCible,$fournisseur);
-           if ($data != null) {
-            return $data;
-           }
+            $data =  $this->checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur);
+            if ($data != null) {
+                return $data;
+            }
 
             $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
             if (!$compteCible) {
@@ -66,8 +132,8 @@ class CompteController extends Controller
             ], 200);
         } else {
             $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
-            $data = $this->checkEnvoyabilite($numCompteenvoyeur,$numeroCompteCible,$fournisseur);
-            if($data != null){
+            $data = $this->checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur);
+            if ($data != null) {
                 return $data;
             }
             if (!$compteEnvoyeur) {
@@ -77,7 +143,7 @@ class CompteController extends Controller
                 if ($compteEnvoyeur->solde < $montantTotal) {
                     return response()->json(['message' => 'solde insuffisant'], 400);
                 }
-                
+
                 $compteEnvoyeur->solde -= $montantTotal;
                 $codeTransaction = $this->generateRandomcode(25);
                 $compteEnvoyeur->save();
@@ -104,7 +170,7 @@ class CompteController extends Controller
         $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
         $fournisseurEnvoyeur = strtolower($compteEnvoyeur->numero_compte[0] . $compteEnvoyeur->numero_compte[1]);
         if ($fournisseurEnvoyeur !== $fournisseurShort) {
-            return response()->json(['message' => 'le retrait '.$fournisseur.' ne peut se faire que sur un compte ' . $fournisseur], 400);
+            return response()->json(['message' => 'le retrait ' . $fournisseur . ' ne peut se faire que sur un compte ' . $fournisseur], 400);
         }
         if (!$compteEnvoyeur) {
             return response()->json(['message' => 'compte envoyeur introuvable'], 400);
@@ -149,11 +215,11 @@ class CompteController extends Controller
         if (!$compteEnvoyeur || !$compteCible) {
             return response()->json(['message' => 'compte introuvable'], 400);
         }
-        $data = $this->checkEnvoyabilite($numCompteenvoyeur,$numeroCompteCible,$fournisseur);
+        $data = $this->checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur);
         if ($data != null) {
             return $data;
         }
-        
+
         $montantTotal = $montant + $frais;
 
 
@@ -191,7 +257,7 @@ class CompteController extends Controller
                 'frais' => $frais,
                 'date_expiration' => $dateExpiration
             ]);
-        } elseif($permanant === false && $fournisseur != 'cb') {
+        } elseif ($permanant === false && $fournisseur != 'cb') {
             return response()->json(['message' => "immediat ne peut etre que sur un compte cb"], 400);
         }
         $compteEnvoyeur->solde -= $montantTotal;
@@ -246,7 +312,6 @@ class CompteController extends Controller
             default:
                 $frais = 0;
         }
-        
         if ($fournisseur === 'wari') {
             $fournisseurShort = 'wr';
             $permanent = true;
@@ -306,14 +371,15 @@ class CompteController extends Controller
         return $code;
     }
 
-    public function getClientByCompte($idCompte){
+    public function getClientByCompte($idCompte)
+    {
         $idCompte = Compte::where('numero_compte', $idCompte)->first();
         $idClient = $idCompte->client_id;
         $client = Client::where('id', $idClient)->first();
         return response()->json([
-            'nom'=>$client->nom,
-            'prenom'=>$client->prenom,
-            'id'=>$client->id
+            'nom' => $client->nom,
+            'prenom' => $client->prenom,
+            'id' => $client->id
         ]);
     }
 }

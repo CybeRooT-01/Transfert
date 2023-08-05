@@ -7,7 +7,9 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\ClientRessource;
+use App\Http\Requests\CreateClientRequest;
 use App\Http\Requests\transfertPostRequest;
 
 class ClientController extends Controller
@@ -23,11 +25,24 @@ class ClientController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CreateClientRequest $request)
     {
-        //
+        $numeroTelephone = $request->numero_telephone;
+        $regex = "/^(77|78|76|75|70)[0-9]{7}$/";
+        if(!preg_match($regex, $numeroTelephone)){
+            return response()->json(['message'=>'Le numero de telephone doit contenir 9 chiffres et doit commencer par 77,78,76,75,70'], Response::HTTP_BAD_REQUEST);
+        }
+        $client = Client::create([
+            'nom' => $request->nom,
+            'prenom' => $request->prenom,
+            'numero_telephone' => $numeroTelephone,
+        ]);
+        return response()->json([
+            'message'=>'Client cree avec succes',
+            'client' => $client
+        ], Response::HTTP_CREATED);
     }
-
+   
     /**
      * Display the specified resource.
      */

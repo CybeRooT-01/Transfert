@@ -29,3 +29,6 @@ Route::post('/transaction', [CompteController::class, 'transaction']);
 
 
 Route::get('/compte/{idCompte}/client', [CompteController::class, 'getClientByCompte']);
+Route::post('/clients/create', [ClientController::class, 'store']);
+Route::post('/compte/create', [CompteController::class, 'store']);
+Route::match(['put','patch'],'/compte/fermer', [CompteController::class, 'fermerCompte']);
