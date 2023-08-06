@@ -161,3 +161,7 @@ hr {
   background-color: yellow;
   color: black;
 }
+#transactionFilter{
+  width: 200px;
+  margin-left: 100px;
+}

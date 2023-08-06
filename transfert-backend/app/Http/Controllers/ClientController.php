@@ -55,7 +55,7 @@ class ClientController extends Controller
                 'montant' => $transaction->montant,
                 'date_transaction' => $transaction->date_transaction,
                 'frais' => $transaction->frais,
-                'date_expiration' => $transaction->date_expiration,
+                'date_expiration' => $transaction->date_expiration
             ];
         });
         return $transactions;

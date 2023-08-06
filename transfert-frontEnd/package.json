@@ -11,5 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "lite-server": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/list.js": "^2.3.1"
   }
 }

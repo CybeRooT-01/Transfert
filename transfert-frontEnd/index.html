@@ -26,26 +26,48 @@
       <div class="mb-3">
         <h3 class="toBeColored">Expediteur</h3>
         <div class="d-flex justify-content-around mt-3">
-          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addClientModal">
+          <button
+            type="button"
+            class="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#addClientModal"
+          >
             Ajouter Client
           </button>
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#openAccountModal">
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#openAccountModal"
+          >
             Ouvrir Compte
           </button>
-          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#closeAccountModal">
+          <button
+            type="button"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#closeAccountModal"
+          >
             Fermer Compte
           </button>
-          <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#toggleAccountStatusModal">
+          <button
+            type="button"
+            class="btn btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#toggleAccountStatusModal"
+          >
             Bloquer/Débloquer Compte
           </button>
-          <button type="button" class="btn btn-danger annulerTransactions" data-bs-toggle="modal" data-bs-target="#cancelTransactionModal">
+          <button
+            type="button"
+            class="btn btn-danger annulerTransactions"
+            data-bs-toggle="modal"
+            data-bs-target="#cancelTransactionModal"
+          >
             Annuler Transaction
           </button>
         </div>
-        
-        
-      
-                    
+
         <hr />
         <div class="row">
           <div class="col-md-6">
@@ -192,8 +214,17 @@
       >
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="transactionHistoryModalLabel">
+            <h5
+              class="modal-title d-flex justify-content-between align-items-center"
+              id="transactionHistoryModalLabel"
+            >
               Historique des transactions
+              <select class="form-select form-select-sm" id="transactionFilter">
+                <option value="date">Filtrer par Date</option>
+                <option value="montant">Filtrer par Montant</option>
+                <option value="compte">Filtrer par Numéro de Compte</option>
+                <option value="telephone">Filtrer par Téléphone</option>
+              </select>
             </h5>
             <button
               type="button"
@@ -203,14 +234,33 @@
             ></button>
           </div>
           <div class="modal-body">
-            <div id="transactionHistoryList"></div>
+            <table class="table" style="color: white">
+              <thead>
+                <tr>
+                  <th>Type Transaction</th>
+                  <th>Montant</th>
+                  <th>Date Transaction</th>
+                  <th>Frais</th>
+                  <th>Date d'Expiration</th>
+                </tr>
+              </thead>
+              <tbody class="transactionHistoryList">
+                <!-- Les transactions seront affichées ici -->
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
 
     <!-- modal ajouter client -->
-    <div class="modal fade" id="addClientModal" tabindex="-1" aria-labelledby="addClientModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="addClientModal"
+      tabindex="-1"
+      aria-labelledby="addClientModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -226,15 +276,35 @@
             <form>
               <div class="mb-3">
                 <label for="clientFirstName" class="form-label">Prénom</label>
-                <input type="text" class="form-control" id="clientFirstName" placeholder="Prénom du client" required>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="clientFirstName"
+                  placeholder="Prénom du client"
+                  required
+                />
               </div>
               <div class="mb-3">
                 <label for="clientLastName" class="form-label">Nom</label>
-                <input type="text" class="form-control" id="clientLastName" placeholder="Nom du client" required>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="clientLastName"
+                  placeholder="Nom du client"
+                  required
+                />
               </div>
               <div class="mb-3">
-                <label for="clientPhoneNumber" class="form-label">Numéro de téléphone</label>
-                <input type="tel" class="form-control" id="clientPhoneNumber" placeholder="Numéro de téléphone du client" required>
+                <label for="clientPhoneNumber" class="form-label"
+                  >Numéro de téléphone</label
+                >
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="clientPhoneNumber"
+                  placeholder="Numéro de téléphone du client"
+                  required
+                />
               </div>
             </form>
           </div>
@@ -246,17 +316,27 @@
             >
               Fermer
             </button>
-            <button type="button" class="btn btn-primary saveClient">Enregistrer</button>
+            <button type="button" class="btn btn-primary saveClient">
+              Enregistrer
+            </button>
           </div>
         </div>
       </div>
     </div>
     <!-- modal ouverture de compte -->
-    <div class="modal fade" id="openAccountModal" tabindex="-1" aria-labelledby="openAccountModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="openAccountModal"
+      tabindex="-1"
+      aria-labelledby="openAccountModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="openAccountModalLabel">Ouvrir un Compte</h5>
+            <h5 class="modal-title" id="openAccountModalLabel">
+              Ouvrir un Compte
+            </h5>
             <button
               type="button"
               class="btn-close"
@@ -267,13 +347,23 @@
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="accountNumber" class="form-label">Numéro de Telephone</label>
-                <input type="text" class="form-control" id="accountNumber" placeholder="Numéro de Telephone" required>
+                <label for="accountNumber" class="form-label"
+                  >Numéro de Telephone</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="accountNumber"
+                  placeholder="Numéro de Telephone"
+                  required
+                />
               </div>
               <div class="mb-3">
                 <label for="accountType" class="form-label">Fournisseur</label>
                 <select class="form-select" id="accountType" required>
-                  <option value="" selected disabled>Choisissez le type de fournisseur</option>
+                  <option value="" selected disabled>
+                    Choisissez le type de fournisseur
+                  </option>
                   <option value="wave">wave</option>
                   <option value="orangemoney">Orange Money</option>
                   <option value="wari">Wari</option>
@@ -290,17 +380,27 @@
             >
               Annuler
             </button>
-            <button type="button" class="btn btn-primary ouvrirCompte">Ouvrir Compte</button>
+            <button type="button" class="btn btn-primary ouvrirCompte">
+              Ouvrir Compte
+            </button>
           </div>
         </div>
       </div>
     </div>
     <!-- fermeture de compte -->
-    <div class="modal fade" id="closeAccountModal" tabindex="-1" aria-labelledby="closeAccountModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="closeAccountModal"
+      tabindex="-1"
+      aria-labelledby="closeAccountModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="closeAccountModalLabel">Fermer un Compte</h5>
+            <h5 class="modal-title" id="closeAccountModalLabel">
+              Fermer un Compte
+            </h5>
             <button
               type="button"
               class="btn-close"
@@ -311,12 +411,28 @@
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="accountNumberToClose" class="form-label">Numéro de Compte à Fermer</label>
-                <input type="text" class="form-control" id="accountNumberToClose" placeholder="Numéro de Compte à Fermer" required>
+                <label for="accountNumberToClose" class="form-label"
+                  >Numéro de Compte à Fermer</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="accountNumberToClose"
+                  placeholder="Numéro de Compte à Fermer"
+                  required
+                />
               </div>
               <div class="mb-3">
-                <label for="closingReason" class="form-label">Raison de Fermeture</label>
-                <textarea class="form-control" id="closingReason" rows="3" placeholder="Raison de la fermeture du compte" required></textarea>
+                <label for="closingReason" class="form-label"
+                  >Raison de Fermeture</label
+                >
+                <textarea
+                  class="form-control"
+                  id="closingReason"
+                  rows="3"
+                  placeholder="Raison de la fermeture du compte"
+                  required
+                ></textarea>
               </div>
             </form>
           </div>
@@ -328,17 +444,27 @@
             >
               Annuler
             </button>
-            <button type="button" class="btn btn-danger fermerCompte">Fermer Compte</button>
+            <button type="button" class="btn btn-danger fermerCompte">
+              Fermer Compte
+            </button>
           </div>
         </div>
       </div>
     </div>
     <!-- debloquer/bloquer -->
-    <div class="modal fade" id="toggleAccountStatusModal" tabindex="-1" aria-labelledby="toggleAccountStatusModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="toggleAccountStatusModal"
+      tabindex="-1"
+      aria-labelledby="toggleAccountStatusModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="toggleAccountStatusModalLabel">Bloquer/Débloquer un Compte</h5>
+            <h5 class="modal-title" id="toggleAccountStatusModalLabel">
+              Bloquer/Débloquer un Compte
+            </h5>
             <button
               type="button"
               class="btn-close"
@@ -349,8 +475,16 @@
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="accountNumberToBlock" class="form-label">Numéro de Compte</label>
-                <input type="text" class="form-control" id="accountNumberToBlock" placeholder="Numéro de Compte" required>
+                <label for="accountNumberToBlock" class="form-label"
+                  >Numéro de Compte</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="accountNumberToBlock"
+                  placeholder="Numéro de Compte"
+                  required
+                />
               </div>
             </form>
           </div>
@@ -362,18 +496,39 @@
             >
               Annuler
             </button>
-            <button type="button" class="btn btn-danger" id="blockAccountButton" >Bloquer</button>
-            <button type="button" class="btn btn-success" id="unblockAccountButton">Débloquer</button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              id="blockAccountButton"
+            >
+              Bloquer
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              id="unblockAccountButton"
+            >
+              Débloquer
+            </button>
           </div>
         </div>
       </div>
     </div>
     <!-- annuler transaction -->
-    <div class="modal fade" id="cancelTransactionModal" tabindex="-1" aria-labelledby="cancelTransactionModalLabel" aria-hidden="true" >
-      <div class="modal-dialog modal-lg"> <!-- Utilisation de modal-lg pour une largeur plus grande -->
+    <div
+      class="modal fade"
+      id="cancelTransactionModal"
+      tabindex="-1"
+      aria-labelledby="cancelTransactionModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <!-- Utilisation de modal-lg pour une largeur plus grande -->
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="cancelTransactionModalLabel">Annuler des Transactions</h5>
+            <h5 class="modal-title" id="cancelTransactionModalLabel">
+              Annuler des Transactions
+            </h5>
             <button
               type="button"
               class="btn-close"
@@ -382,7 +537,7 @@
             ></button>
           </div>
           <div class="modal-body">
-            <table class="table" style="color: white;">
+            <table class="table" style="color: white">
               <thead>
                 <tr>
                   <th>Nom Envoyeur</th>
@@ -392,28 +547,7 @@
                   <th>Action</th>
                 </tr>
               </thead>
-              <tbody class="zoneToInsertTransactions">
-                <!-- Remplacer cette partie avec une boucle pour afficher les transactions -->
-                <!-- <tr>
-                  <td>Nom1</td>
-                  <td>Prénom1</td>
-                  <td>2023-08-05</td>
-                  <td>100</td>
-                  <td>
-                    <button type="button" class="btn btn-danger">Supprimer</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Nom2</td>
-                  <td>Prénom2</td>
-                  <td>2023-08-06</td>
-                  <td>150</td>
-                  <td>
-                    <button type="button" class="btn btn-danger">Supprimer</button>
-                  </td>
-                </tr> -->
-                <!-- Fin de la boucle -->
-              </tbody>
+              <tbody class="zoneToInsertTransactions"></tbody>
             </table>
           </div>
           <div class="modal-footer">
@@ -428,18 +562,14 @@
         </div>
       </div>
     </div>
-    
-    
-    
-    
-    
-    
 
-    <script src="./dist/transaction.js"></script>
+    <script type="module" src="./dist/transaction.js"></script>
+
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
       integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
       crossorigin="anonymous"
     ></script>
+
   </body>
 </html>

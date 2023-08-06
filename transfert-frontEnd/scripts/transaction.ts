@@ -1,3 +1,4 @@
+
 const inputCompteExpediteur = document.querySelector(
   ".expedideur"
 ) as HTMLInputElement;
@@ -29,8 +30,8 @@ const codeCheckbox = document.getElementById(
 ) as HTMLInputElement;
 
 const modalHistorique = document.querySelector(
-  "#transactionHistoryList"
-) as HTMLDivElement;
+  ".transactionHistoryList"
+) as HTMLTableElement;
 
 
 
@@ -102,14 +103,14 @@ function configureInputCompte(
               .then((data2) => {
                 modalHistorique.innerHTML = "";
                 data2.forEach((element: any) => {
-                  let li = document.createElement("li");
-                  if (element.date_expiration === null) {
-                    li.textContent = `${element.type_transaction} de  ${element.montant} fcfa le ${element.date_transaction} avec ${element.frais}Fcfa de frais`;
-                    modalHistorique.appendChild(li);
-                  } else {
-                    li.textContent = `${element.type_transaction} de  ${element.montant} fcfa le ${element.date_transaction}, avec ${element.frais}Fcfa de frais, qui vont expirer le ${element.date_expiration}`;
-                    modalHistorique.appendChild(li);
-                  }
+                  modalHistorique.innerHTML += `
+                  <tr>
+                  <td>${element.type_transaction}</td>
+                  <td>${element.montant}CFA</td>
+                  <td>${element.date_transaction}</td>
+                  <td>${element.frais}CFA</td>
+                  <td>${element.date_expiration !== null ? element.date_expiration : '--'}</td>
+                </tr>`;
                 });
               });
           } else {
@@ -214,62 +215,72 @@ btnCreerCompte.addEventListener("click", () => {
       showNotification(`${datas.message}`);
     });
 });
-  //fermer compte
-  const numeroCompteToClose = document.querySelector("#accountNumberToClose") as HTMLInputElement;
-  const raisonsDeFermeture = document.querySelector("#closingReason") as HTMLInputElement;
-  const btnFermerCompte = document.querySelector(".fermerCompte");
+//fermer compte
+const numeroCompteToClose = document.querySelector(
+  "#accountNumberToClose"
+) as HTMLInputElement;
+const raisonsDeFermeture = document.querySelector(
+  "#closingReason"
+) as HTMLInputElement;
+const btnFermerCompte = document.querySelector(".fermerCompte");
 
-  btnFermerCompte.addEventListener("click", () => {
-    let data = {
-      numero_compte: numeroCompteToClose.value,
-      raisons: raisonsDeFermeture.value,
-    };
-    // console.log(data);
-    let url = "http://127.0.0.1:8000/api/compte/fermer"
-    fetch(url, {
-      method: "PUT",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((datas) => {
-        showNotification(`${datas.message}`);
-      });
-  });
+btnFermerCompte.addEventListener("click", () => {
+  let data = {
+    numero_compte: numeroCompteToClose.value,
+    raisons: raisonsDeFermeture.value,
+  };
+  // console.log(data);
+  let url = "http://127.0.0.1:8000/api/compte/fermer";
+  fetch(url, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((datas) => {
+      showNotification(`${datas.message}`);
+    });
+});
 
-  //bloquer debloquer compte
-  const numeroCompteToBlock = document.querySelector("#accountNumberToBlock") as HTMLInputElement;
-  const btnBloquerCompte = document.querySelector("#blockAccountButton") as HTMLButtonElement;
-  const btnDebloquerCompte = document.querySelector("#unblockAccountButton") as HTMLButtonElement;
+//bloquer debloquer compte
+const numeroCompteToBlock = document.querySelector(
+  "#accountNumberToBlock"
+) as HTMLInputElement;
+const btnBloquerCompte = document.querySelector(
+  "#blockAccountButton"
+) as HTMLButtonElement;
+const btnDebloquerCompte = document.querySelector(
+  "#unblockAccountButton"
+) as HTMLButtonElement;
 
 numeroCompteToBlock.addEventListener("input", () => {
   let numeroCompte = numeroCompteToBlock.value;
-    let url = `http://127.0.0.1:8000/api/compte/${numeroCompte}`
-    fetch(url)
-      .then((response) => response.json())
-      .then((data) => {
-      if(data.bloquer === 1){
+  let url = `http://127.0.0.1:8000/api/compte/${numeroCompte}`;
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.bloquer === 1) {
         btnBloquerCompte.style.display = "none";
         btnDebloquerCompte.style.display = "block";
-      }else{
+      } else {
         btnBloquerCompte.style.display = "block";
         btnDebloquerCompte.style.display = "none";
       }
-      })
-      .catch((error) => {
-        btnBloquerCompte.style.display = "block";
-        btnDebloquerCompte.style.display = "block";
-        console.log(error);
-      });
+    })
+    .catch((error) => {
+      btnBloquerCompte.style.display = "block";
+      btnDebloquerCompte.style.display = "block";
+      console.log(error);
+    });
 });
-function blockUnBlockAccount(){
+function blockUnBlockAccount() {
   let data = {
     numero_compte: numeroCompteToBlock.value,
   };
-  let url = "http://127.0.0.1:8000/api/compte/bloquer/debloquer"
+  let url = "http://127.0.0.1:8000/api/compte/bloquer/debloquer";
   fetch(url, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -287,8 +298,12 @@ btnBloquerCompte.addEventListener("click", blockUnBlockAccount);
 btnDebloquerCompte.addEventListener("click", blockUnBlockAccount);
 
 //annuler transaction
-const annulerTransactions = document.querySelector(".annulerTransactions") as HTMLButtonElement;
-const zoneToInsertTransactions = document.querySelector(".zoneToInsertTransactions") as HTMLTableElement;
+const annulerTransactions = document.querySelector(
+  ".annulerTransactions"
+) as HTMLButtonElement;
+const zoneToInsertTransactions = document.querySelector(
+  ".zoneToInsertTransactions"
+) as HTMLTableElement;
 annulerTransactions.addEventListener("click", () => {
   let url = "http://127.0.0.1:8000/api/transactions/annuler";
   fetch(url)
@@ -309,7 +324,9 @@ annulerTransactions.addEventListener("click", () => {
         </tr>`;
       });
       zoneToInsertTransactions.innerHTML = table;
-      const annulerTransactionButtons = document.querySelectorAll(".annulerTransactionButton");
+      const annulerTransactionButtons = document.querySelectorAll(
+        ".annulerTransactionButton"
+      );
       annulerTransactionButtons.forEach((button) => {
         button.addEventListener("click", () => {
           let data = {
@@ -326,16 +343,12 @@ annulerTransactions.addEventListener("click", () => {
           })
             .then((response) => response.json())
             .then((datas) => {
-              if(datas.status === "success"){
+              if (datas.status === "success") {
                 showNotification(`${datas.message}`);
                 button.parentElement.parentElement.remove();
               }
-            }
-          );
+            });
         });
       });
     });
 });
-          
-
-      

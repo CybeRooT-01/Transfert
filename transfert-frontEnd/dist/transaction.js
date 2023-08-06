@@ -8,7 +8,7 @@ const fournisseur = document.querySelector(".fournisseur");
 const montant = document.querySelector(".montant");
 const destinataire = document.querySelector(".destinataireZone");
 const codeCheckbox = document.getElementById("codeCheckbox");
-const modalHistorique = document.querySelector("#transactionHistoryList");
+const modalHistorique = document.querySelector(".transactionHistoryList");
 let typeTransactionValue = typeTransaction.value;
 typeTransaction.addEventListener("change", () => {
     typeTransactionValue = typeTransaction.value;
@@ -70,15 +70,14 @@ function configureInputCompte(inputCompte, nomExpediteur) {
                         .then((data2) => {
                         modalHistorique.innerHTML = "";
                         data2.forEach((element) => {
-                            let li = document.createElement("li");
-                            if (element.date_expiration === null) {
-                                li.textContent = `${element.type_transaction} de  ${element.montant} fcfa le ${element.date_transaction} avec ${element.frais}Fcfa de frais`;
-                                modalHistorique.appendChild(li);
-                            }
-                            else {
-                                li.textContent = `${element.type_transaction} de  ${element.montant} fcfa le ${element.date_transaction}, avec ${element.frais}Fcfa de frais, qui vont expirer le ${element.date_expiration}`;
-                                modalHistorique.appendChild(li);
-                            }
+                            modalHistorique.innerHTML += `
+                  <tr>
+                  <td>${element.type_transaction}</td>
+                  <td>${element.montant}CFA</td>
+                  <td>${element.date_transaction}</td>
+                  <td>${element.frais}CFA</td>
+                  <td>${element.date_expiration !== null ? element.date_expiration : '--'}</td>
+                </tr>`;
                         });
                     });
                 }
