@@ -9,6 +9,8 @@ const montant = document.querySelector(".montant");
 const destinataire = document.querySelector(".destinataireZone");
 const codeCheckbox = document.getElementById("codeCheckbox");
 const modalHistorique = document.querySelector(".transactionHistoryList");
+const closeBtn = document.querySelector(".close");
+closeBtn.addEventListener("click", closeNotification);
 const info = document.querySelector(".info");
 info.addEventListener("click", () => {
     const transactionFilter = document.querySelector("#transactionFilter");

@@ -31,7 +31,8 @@ const codeCheckbox = document.getElementById(
 const modalHistorique = document.querySelector(
   ".transactionHistoryList"
 ) as HTMLTableElement;
-
+const closeBtn = document.querySelector(".close");
+closeBtn.addEventListener("click", closeNotification);
 
 const info = document.querySelector(".info");
 info.addEventListener("click", () => {
