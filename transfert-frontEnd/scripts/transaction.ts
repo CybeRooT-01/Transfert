@@ -1,4 +1,3 @@
-
 const inputCompteExpediteur = document.querySelector(
   ".expedideur"
 ) as HTMLInputElement;
@@ -34,6 +33,38 @@ const modalHistorique = document.querySelector(
 ) as HTMLTableElement;
 
 
+const info = document.querySelector(".info");
+info.addEventListener("click", () => {
+  const transactionFilter = document.querySelector("#transactionFilter") as HTMLSelectElement;
+  const transactionRows = document.querySelectorAll(".transactionHistoryList tr");
+console.log(transactionRows);
+
+
+transactionFilter.addEventListener("change", () => {
+  const filterValue = transactionFilter.value;
+  if (filterValue === "montant") {
+      const sortedRows = Array.from(transactionRows).sort((rowA, rowB) => {
+      const amountA = parseInt(rowA.querySelector("td:nth-child(2)")?.textContent?.replace("CFA", "") || "0");
+      const amountB = parseInt(rowB.querySelector("td:nth-child(2)")?.textContent?.replace("CFA", "") || "0");
+      return amountA - amountB;
+    });
+    transactionRows.forEach(row => row.remove());
+    sortedRows.forEach(row => modalHistorique.appendChild(row));
+  } else if (filterValue === "date") {
+      const sortedRows = Array.from(transactionRows).sort((rowA, rowB) => {
+      const dateA = rowA.querySelector("td:nth-child(3)")?.textContent || "";
+      const dateB = rowB.querySelector("td:nth-child(3)")?.textContent || "";
+      return dateA.localeCompare(dateB);
+    });
+    transactionRows.forEach(row => row.remove());
+    sortedRows.forEach(row => modalHistorique.appendChild(row));
+  }
+});
+});
+
+
+
+  
 
 let typeTransactionValue = typeTransaction.value;
 

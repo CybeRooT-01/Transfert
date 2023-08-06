@@ -9,6 +9,35 @@ const montant = document.querySelector(".montant");
 const destinataire = document.querySelector(".destinataireZone");
 const codeCheckbox = document.getElementById("codeCheckbox");
 const modalHistorique = document.querySelector(".transactionHistoryList");
+const info = document.querySelector(".info");
+info.addEventListener("click", () => {
+    const transactionFilter = document.querySelector("#transactionFilter");
+    const transactionRows = document.querySelectorAll(".transactionHistoryList tr");
+    console.log(transactionRows);
+    transactionFilter.addEventListener("change", () => {
+        const filterValue = transactionFilter.value;
+        if (filterValue === "montant") {
+            const sortedRows = Array.from(transactionRows).sort((rowA, rowB) => {
+                var _a, _b, _c, _d;
+                const amountA = parseInt(((_b = (_a = rowA.querySelector("td:nth-child(2)")) === null || _a === void 0 ? void 0 : _a.textContent) === null || _b === void 0 ? void 0 : _b.replace("CFA", "")) || "0");
+                const amountB = parseInt(((_d = (_c = rowB.querySelector("td:nth-child(2)")) === null || _c === void 0 ? void 0 : _c.textContent) === null || _d === void 0 ? void 0 : _d.replace("CFA", "")) || "0");
+                return amountA - amountB;
+            });
+            transactionRows.forEach(row => row.remove());
+            sortedRows.forEach(row => modalHistorique.appendChild(row));
+        }
+        else if (filterValue === "date") {
+            const sortedRows = Array.from(transactionRows).sort((rowA, rowB) => {
+                var _a, _b;
+                const dateA = ((_a = rowA.querySelector("td:nth-child(3)")) === null || _a === void 0 ? void 0 : _a.textContent) || "";
+                const dateB = ((_b = rowB.querySelector("td:nth-child(3)")) === null || _b === void 0 ? void 0 : _b.textContent) || "";
+                return dateA.localeCompare(dateB);
+            });
+            transactionRows.forEach(row => row.remove());
+            sortedRows.forEach(row => modalHistorique.appendChild(row));
+        }
+    });
+});
 let typeTransactionValue = typeTransaction.value;
 typeTransaction.addEventListener("change", () => {
     typeTransactionValue = typeTransaction.value;
