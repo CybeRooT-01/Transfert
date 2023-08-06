@@ -12,6 +12,7 @@ class Client extends Model
     {
         return $this->hasMany(Compte::class, 'client_id');
     }
+
     protected $hidden = [
         'created_at',
         'updated_at'

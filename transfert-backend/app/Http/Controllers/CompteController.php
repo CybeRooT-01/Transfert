@@ -110,14 +110,15 @@ class CompteController extends Controller
             return response()->json(['message' => 'le fournisseur wave ne peut effectuer que des transferts entre comptes wave'], 400);
         }
     }
-    private function traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible)
+    private function traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible)
     {
         if (!$avecCode) {
             $codeTransaction = $this->generateRandomcode(15);
-            $client = Client::where('numero_telephone', $NumclientEnvoyeur)->first();
+            $client = Compte::where('numero_compte', $numCompteenvoyeur)->where('statut', 1)->first();
             if (!$client) {
-                return response()->json(['message' => 'il faut au moins un numero de telephone'], 400);
+                return response()->json(['message' => 'Client inexistant'], 400);
             }
+
             $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
             $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
 
@@ -133,16 +134,13 @@ class CompteController extends Controller
             if (!$compteCible) {
                 return response()->json(['message' => 'compte introuvable'], 400);
             }
-            if($compteCible->bloquer == 1){
-                return response()->json(['message' => 'retrait impossible sur un compte bloquer'], 400);
-            }
             $compteCible->solde += $montant;
             $compteCible->save();
-            Transaction::create([
+           $transac =  Transaction::create([
                 'montant' => $montant,
                 'type_transaction' => $type,
                 'date_transaction' => Carbon::now(),
-                'envoyeur_id' => null,
+                'envoyeur_id' => $client->id,
                 'receveur_id' => $compteCible->id,
                 'frais' => $frais,
                 'permanent' => false,
@@ -152,6 +150,7 @@ class CompteController extends Controller
                 'message' => 'depot effectue avec succes',
                 'code' => $codeTransaction,
                 'frais' => $frais,
+                'transaction' => $transac,
             ], 200);
         } else {
             $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
@@ -189,7 +188,7 @@ class CompteController extends Controller
     }
     private function traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort)
     {
-        $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
+        $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->where('statut', 1)->first();
         $fournisseurEnvoyeur = strtolower($compteEnvoyeur->numero_compte[0] . $compteEnvoyeur->numero_compte[1]);
         if ($fournisseurEnvoyeur !== $fournisseurShort) {
             return response()->json(['message' => 'le retrait ' . $fournisseur . ' ne peut se faire que sur un compte ' . $fournisseur], 400);
@@ -369,7 +368,7 @@ class CompteController extends Controller
             $fournisseurShort = 'wv';
             $permanent = true;
             if ($type == 'depot') {
-                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible);
             } elseif ($type == 'retrait') {
                 return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
             } elseif ($type === "transfert") {
@@ -408,7 +407,7 @@ class CompteController extends Controller
         return response()->json([
             'nom' => $client->nom,
             'prenom' => $client->prenom,
-            'id' => $client->id,
+            'id' => $idCompte->id,
         ]);
     }
 

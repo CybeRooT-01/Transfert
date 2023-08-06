@@ -35,6 +35,8 @@ const closeBtn = document.querySelector(".close");
 closeBtn.addEventListener("click", closeNotification);
 
 const info = document.querySelector(".info");
+const closecodebtn = document.querySelector(".closeCode-btn");
+closecodebtn.addEventListener("click", closeCode);
 info.addEventListener("click", () => {
   const transactionFilter = document.querySelector("#transactionFilter") as HTMLSelectElement;
   const transactionRows = document.querySelectorAll(".transactionHistoryList tr");
@@ -127,9 +129,12 @@ function configureInputCompte(
       fetch(url)
         .then((response) => response.json())
         .then((data) => {
+          console.log(data);
+          
           if (data.nom && data.prenom) {
             nomExpediteur.value = `${data.nom} ${data.prenom}`;
             let url2 = `http://127.0.0.1:8000/api/clients/${data.id}/transaction`;
+            
             fetch(url2)
               .then((response) => response.json())
               .then((data2) => {

@@ -35,8 +35,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(Compte::class, 'receveur_id');
     }
-    public function envoyeur()
+    public function compte()
     {
-        return $this->belongsTo(Client::class, 'envoyeur_id');
+        return $this->belongsTo(Compte::class, 'envoyeur_id');
     }
+    
 }

@@ -20,8 +20,8 @@ class TransactionRessources extends JsonResource
             'date_transaction' => $this->date_transaction,
             'montant' => $this->montant,
             'frais' => $this->frais,
-            'envoyeur_nom'=>$this->envoyeur->nom,
-            'envoyeur_prenom'=>$this->envoyeur->prenom,
+            'envoyeur_nom'=>$this->compte->client->nom,
+            'envoyeur_prenom'=>$this->compte->client->prenom,
        ];
     }
 }
