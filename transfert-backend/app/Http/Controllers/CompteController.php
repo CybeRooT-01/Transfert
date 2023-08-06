@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BloqueDebloquePutRequest;
 use App\Http\Requests\CompteCloseRequest;
 use App\Http\Requests\ComptePostRequest;
 use Carbon\Carbon;
@@ -12,6 +13,25 @@ use App\Http\Requests\transfertPostRequest;
 
 class CompteController extends Controller
 {
+    public function bloquerDebloquerCompte(BloqueDebloquePutRequest $request){
+        $numCompte = $request->numero_compte;
+        $compte = Compte::where('numero_compte', $numCompte)->where('statut', 1)->first();
+        if($compte->bloquer == 1){
+            $compte->bloquer = 0;
+            $compte->save();
+            return response()->json([
+                'message' => 'Compte débloqué avec succées.',
+                'compte'=>$compte
+            ], 200);
+        }else{
+            $compte->bloquer = 1;
+            $compte->save();
+            return response()->json([
+                'message' => 'Compte bloqué avec succées.',
+                'compte'=>$compte
+            ], 200);
+        }
+    }
     public function fermerCompte(CompteCloseRequest $request){
         $numCompte = $request->numero_compte;
         $raison = $request->raisons;
@@ -109,9 +129,12 @@ class CompteController extends Controller
                 return $data;
             }
 
-            $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
+            $compteCible = Compte::where('numero_compte', $numeroCompteCible)->where('statut', 1)->first();
             if (!$compteCible) {
                 return response()->json(['message' => 'compte introuvable'], 400);
+            }
+            if($compteCible->bloquer == 1){
+                return response()->json(['message' => 'retrait impossible sur un compte bloquer'], 400);
             }
             $compteCible->solde += $montant;
             $compteCible->save();
@@ -143,7 +166,6 @@ class CompteController extends Controller
                 if ($compteEnvoyeur->solde < $montantTotal) {
                     return response()->json(['message' => 'solde insuffisant'], 400);
                 }
-
                 $compteEnvoyeur->solde -= $montantTotal;
                 $codeTransaction = $this->generateRandomcode(25);
                 $compteEnvoyeur->save();
@@ -175,6 +197,9 @@ class CompteController extends Controller
         if (!$compteEnvoyeur) {
             return response()->json(['message' => 'compte envoyeur introuvable'], 400);
         }
+        if($compteEnvoyeur->bloquer == 1){
+            return response()->json(['message' => 'retrait impossible sur un compte bloquer'], 400);
+        }
         $montantTotal = $montant + $frais;
         if ($compteEnvoyeur->solde < $montantTotal) {
             return response()->json(['message' => 'solde insuffisant'], 400);
@@ -203,10 +228,11 @@ class CompteController extends Controller
             ], 200);
         }
     }
+
     private function traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanant)
     {
-        $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
-        $compteCible = Compte::where('numero_compte', $numeroCompteCible)->first();
+        $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->where('statut', 1)->first();
+        $compteCible = Compte::where('numero_compte', $numeroCompteCible)->where('statut', 1)->first();
         $fournisseurEnvoyeur = strtolower($compteEnvoyeur->numero_compte[0] . $compteEnvoyeur->numero_compte[1]);
         $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
         if ($fournisseurEnvoyeur !== $fournisseurCible) {
@@ -214,6 +240,9 @@ class CompteController extends Controller
         }
         if (!$compteEnvoyeur || !$compteCible) {
             return response()->json(['message' => 'compte introuvable'], 400);
+        }
+        if($compteEnvoyeur->bloquer == 1){
+            return response()->json(['message' => 'transfert impossible sur un compte bloquer'], 400);
         }
         $data = $this->checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur);
         if ($data != null) {
@@ -223,7 +252,7 @@ class CompteController extends Controller
         $montantTotal = $montant + $frais;
 
 
-        if ($permanant === false && $fournisseur == 'cb') {
+        if ($permanant === true && $fournisseur == 'cb') {
             $dateActuelle = Carbon::now();
             $codeTransaction = $this->generateRandomcode(30);
             $compteEnvoyeur->solde -= $montantTotal;
@@ -318,7 +347,7 @@ class CompteController extends Controller
             if ($type == 'depot') {
                 return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
             } elseif ($type == 'retrait') {
-                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+                return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
             } elseif ($type === "transfert") {
                 return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
             } else {
@@ -330,7 +359,7 @@ class CompteController extends Controller
             if ($type == 'depot') {
                 return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
             } elseif ($type == 'retrait') {
-                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+                return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
             } elseif ($type === "transfert") {
                 return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
             } else {
@@ -342,7 +371,7 @@ class CompteController extends Controller
             if ($type == 'depot') {
                 return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
             } elseif ($type == 'retrait') {
-                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+                return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
             } elseif ($type === "transfert") {
                 return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
             } else {
@@ -353,7 +382,7 @@ class CompteController extends Controller
             if ($type == 'depot') {
                 return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
             } elseif ($type == 'retrait') {
-                return $this->traiterRetrait($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $fournisseurShort);
+                return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
             } elseif ($type === "transfert") {
                 return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
             }
@@ -373,13 +402,23 @@ class CompteController extends Controller
 
     public function getClientByCompte($idCompte)
     {
-        $idCompte = Compte::where('numero_compte', $idCompte)->first();
+        $idCompte = Compte::where('numero_compte', $idCompte)->where('statut', 1)->first();
         $idClient = $idCompte->client_id;
         $client = Client::where('id', $idClient)->first();
         return response()->json([
             'nom' => $client->nom,
             'prenom' => $client->prenom,
-            'id' => $client->id
+            'id' => $client->id,
+        ]);
+    }
+
+    public function getCompteByNumeroCompte($numeroCompte)
+    {
+        $compte = Compte::where('numero_compte', $numeroCompte)->where('statut', 1)->first();
+        return response()->json([
+            'numero_compte' => $compte->numero_compte,
+            'id' => $compte->id,
+            'bloquer' => $compte->bloquer,
         ]);
     }
 }

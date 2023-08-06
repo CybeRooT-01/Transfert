@@ -32,7 +32,7 @@ const modalHistorique = document.querySelector(
   "#transactionHistoryList"
 ) as HTMLDivElement;
 
-const toBeColored = document.querySelector(".toBeColored");
+
 
 let typeTransactionValue = typeTransaction.value;
 
@@ -240,3 +240,102 @@ btnCreerCompte.addEventListener("click", () => {
       });
   });
 
+  //bloquer debloquer compte
+  const numeroCompteToBlock = document.querySelector("#accountNumberToBlock") as HTMLInputElement;
+  const btnBloquerCompte = document.querySelector("#blockAccountButton") as HTMLButtonElement;
+  const btnDebloquerCompte = document.querySelector("#unblockAccountButton") as HTMLButtonElement;
+
+numeroCompteToBlock.addEventListener("input", () => {
+  let numeroCompte = numeroCompteToBlock.value;
+    let url = `http://127.0.0.1:8000/api/compte/${numeroCompte}`
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+      if(data.bloquer === 1){
+        btnBloquerCompte.style.display = "none";
+        btnDebloquerCompte.style.display = "block";
+      }else{
+        btnBloquerCompte.style.display = "block";
+        btnDebloquerCompte.style.display = "none";
+      }
+      })
+      .catch((error) => {
+        btnBloquerCompte.style.display = "block";
+        btnDebloquerCompte.style.display = "block";
+        console.log(error);
+      });
+});
+function blockUnBlockAccount(){
+  let data = {
+    numero_compte: numeroCompteToBlock.value,
+  };
+  let url = "http://127.0.0.1:8000/api/compte/bloquer/debloquer"
+  fetch(url, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((datas) => {
+      showNotification(`${datas.message}`);
+    });
+}
+btnBloquerCompte.addEventListener("click", blockUnBlockAccount);
+btnDebloquerCompte.addEventListener("click", blockUnBlockAccount);
+
+//annuler transaction
+const annulerTransactions = document.querySelector(".annulerTransactions") as HTMLButtonElement;
+const zoneToInsertTransactions = document.querySelector(".zoneToInsertTransactions") as HTMLTableElement;
+annulerTransactions.addEventListener("click", () => {
+  let url = "http://127.0.0.1:8000/api/transactions/annuler";
+  fetch(url)
+    .then((response) => response.json())
+    .then((datas) => {
+      let transactions = datas.data;
+      let table = "";
+      transactions.forEach((transaction: any, index: number) => {
+        table += `
+        <tr>
+          <td>${transaction.envoyeur_nom}</td>
+          <td>${transaction.envoyeur_prenom}</td>
+          <td>${transaction.date_transaction}</td>
+          <td>${transaction.montant}</td>
+          <td>
+            <button class="btn btn-danger annulerTransactionButton" data-id="${transaction.id}">Annuler</button>
+          </td>
+        </tr>`;
+      });
+      zoneToInsertTransactions.innerHTML = table;
+      const annulerTransactionButtons = document.querySelectorAll(".annulerTransactionButton");
+      annulerTransactionButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          let data = {
+            id: button.getAttribute("data-id"),
+          };
+          let url = `http://localhost:8000/api/transactions/${data.id}/annuler`;
+          fetch(url, {
+            method: "PUT",
+            body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          })
+            .then((response) => response.json())
+            .then((datas) => {
+              if(datas.status === "success"){
+                showNotification(`${datas.message}`);
+                button.parentElement.parentElement.remove();
+              }
+            }
+          );
+        });
+      });
+    });
+});
+          
+
+      

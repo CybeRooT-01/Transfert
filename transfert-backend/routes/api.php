@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompteController;
+use App\Http\Controllers\TransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,10 @@ Route::post('/transaction', [CompteController::class, 'transaction']);
 
 
 Route::get('/compte/{idCompte}/client', [CompteController::class, 'getClientByCompte']);
+Route::get('/compte/{numeroCompte}', [CompteController::class, 'getCompteByNumeroCompte']);
 Route::post('/clients/create', [ClientController::class, 'store']);
 Route::post('/compte/create', [CompteController::class, 'store']);
 Route::match(['put','patch'],'/compte/fermer', [CompteController::class, 'fermerCompte']);
+Route::match(['put','patch'],'/compte/bloquer/debloquer', [CompteController::class, 'bloquerDebloquerCompte']);
+Route::get('/transactions/annuler', [TransactionController::class, 'annulerTransaction']);
+Route::match(['put','patch'],'/transactions/{id}/annuler', [TransactionController::class, 'annulerTransactionById']);

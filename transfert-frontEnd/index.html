@@ -38,7 +38,7 @@
           <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#toggleAccountStatusModal">
             Bloquer/Débloquer Compte
           </button>
-          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelTransactionModal">
+          <button type="button" class="btn btn-danger annulerTransactions" data-bs-toggle="modal" data-bs-target="#cancelTransactionModal">
             Annuler Transaction
           </button>
         </div>
@@ -333,6 +333,104 @@
         </div>
       </div>
     </div>
+    <!-- debloquer/bloquer -->
+    <div class="modal fade" id="toggleAccountStatusModal" tabindex="-1" aria-labelledby="toggleAccountStatusModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="toggleAccountStatusModalLabel">Bloquer/Débloquer un Compte</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="accountNumberToBlock" class="form-label">Numéro de Compte</label>
+                <input type="text" class="form-control" id="accountNumberToBlock" placeholder="Numéro de Compte" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Annuler
+            </button>
+            <button type="button" class="btn btn-danger" id="blockAccountButton" >Bloquer</button>
+            <button type="button" class="btn btn-success" id="unblockAccountButton">Débloquer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- annuler transaction -->
+    <div class="modal fade" id="cancelTransactionModal" tabindex="-1" aria-labelledby="cancelTransactionModalLabel" aria-hidden="true" >
+      <div class="modal-dialog modal-lg"> <!-- Utilisation de modal-lg pour une largeur plus grande -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="cancelTransactionModalLabel">Annuler des Transactions</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table" style="color: white;">
+              <thead>
+                <tr>
+                  <th>Nom Envoyeur</th>
+                  <th>Prénom Envoyeur</th>
+                  <th>Date</th>
+                  <th>Montant</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody class="zoneToInsertTransactions">
+                <!-- Remplacer cette partie avec une boucle pour afficher les transactions -->
+                <!-- <tr>
+                  <td>Nom1</td>
+                  <td>Prénom1</td>
+                  <td>2023-08-05</td>
+                  <td>100</td>
+                  <td>
+                    <button type="button" class="btn btn-danger">Supprimer</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Nom2</td>
+                  <td>Prénom2</td>
+                  <td>2023-08-06</td>
+                  <td>150</td>
+                  <td>
+                    <button type="button" class="btn btn-danger">Supprimer</button>
+                  </td>
+                </tr> -->
+                <!-- Fin de la boucle -->
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    
+    
     
     
     

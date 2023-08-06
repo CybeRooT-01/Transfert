@@ -48,7 +48,7 @@ class ClientController extends Controller
      */
     public function getclientsTransaction(string $id)
     {
-        $transactions = Transaction::where('envoyeur_id', $id)->get();
+        $transactions = Transaction::where('envoyeur_id', $id)->where('etat', 1)->get();
         $transactions = $transactions->map(function($transaction){
             return [
                 'type_transaction' => $transaction->type_transaction,
