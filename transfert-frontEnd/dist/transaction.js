@@ -91,7 +91,13 @@ function configureInputCompte(inputCompte, nomExpediteur) {
         const numeroCompte = inputCompte.value;
         nomExpediteur.value = "";
         if (numeroCompte.trim() !== "") {
-            let url = `http://127.0.0.1:8000/api/compte/${numeroCompte}/client`;
+            let url;
+            if (numeroCompte.length === 9) {
+                url = `http://127.0.0.1:8000/api/compte/${numeroCompte}`;
+            }
+            else {
+                url = `http://127.0.0.1:8000/api/compte/${numeroCompte}/client`;
+            }
             fetch(url)
                 .then((response) => response.json())
                 .then((data) => {
@@ -320,5 +326,66 @@ annulerTransactions.addEventListener("click", () => {
                 });
             });
         });
+    });
+});
+//retrait avec code
+const btnRetraitAvecCode = document.querySelector('.retraitCode');
+const inputCodeARetirer = document.querySelector('#transactionCode');
+const transactionTelephone = document.querySelector('#transactionTel');
+btnRetraitAvecCode.addEventListener('click', () => {
+    let data = {
+        code: inputCodeARetirer.value,
+        numero: transactionTelephone.value
+    };
+    let url = "http://127.0.0.1:8000/api/retrait/code";
+    fetch(url, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+    })
+        .then((response) => response.json())
+        .then((datas) => {
+        showNotification(`${datas.message}`);
+        if (datas.montant !== undefined) {
+            showCode(`${datas.montant} FCFA Frais: ${datas.frais} FCFA`);
+        }
+    });
+});
+const transactionMontant = document.querySelector('#transactionMontant');
+const transactionCode = document.querySelector('#transactionCode');
+transactionCode.addEventListener('input', () => {
+    transactionMontant.value = "";
+    let code = transactionCode.value;
+    let url = `http://127.0.0.1:8000/api/code/${code}/montant`;
+    let numero;
+    fetch(url)
+        .then((response) => response.json())
+        .then((datas) => {
+        console.log(datas);
+        transactionTelephone.addEventListener('input', () => {
+            let numero = transactionTelephone.value;
+            let url2 = `http://127.0.0.1:8000/api/code/${code}/client`;
+            fetch(url2)
+                .then((response) => response.json())
+                .then((datas1) => {
+                let numclient = datas1.client;
+                if (numclient === numero) {
+                    transactionMontant.value = `${datas.montant} FCFA Frais: ${datas.frais} FCFA`;
+                }
+                else {
+                    console.log("pas ok");
+                }
+            })
+                .catch((error) => {
+                console.log(error);
+            });
+        });
+    })
+        .catch((error) => {
+        transactionMontant.value = "";
+        console.log(error);
     });
 });

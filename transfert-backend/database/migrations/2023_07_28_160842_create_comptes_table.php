@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('comptes', function (Blueprint $table) {
             $table->id();
-            $table->string('numero_compte')->unique();
+            $table->string('numero_compte');
             $table->string('fournisseur');
             $table->float('solde');
             $table->unsignedBigInteger('client_id');

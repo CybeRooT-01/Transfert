@@ -19,7 +19,9 @@ class Transaction extends Model
         'permanent',
         'code_transaction',
         'date_transaction',
-        'date_expiration'
+        'date_expiration',
+        'Client_Envoeyur_Id',
+        'Client_Receveur_Id',
     ];
     public function client()
     {

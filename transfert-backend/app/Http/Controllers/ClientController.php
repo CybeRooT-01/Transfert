@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Resources\ClientRessource;
 use App\Http\Requests\CreateClientRequest;
 use App\Http\Requests\transfertPostRequest;
+use App\Http\Requests\TransactionCodeRequest;
 
 class ClientController extends Controller
 {
@@ -21,7 +22,26 @@ class ClientController extends Controller
     {
         return Client::all();
     }
+    public function getClientByCodeTransaction($code){
+        $transaction = Transaction::where('code_transaction', $code)->first();
+        $client = Client::where('id', $transaction->Client_Receveur_Id)->first();
+        return response()->json([
+            'client'=>$client->numero_telephone
+        ], 200);
+    }
 
+    public function getClientByCode($code){
+        $code = Transaction::where('code_transaction', $code)->first();
+        $client_receveur = Client::where('id', $code->Client_Receveur_Id)->first();
+        $montant = $code->montant;
+        $frais = $code->frais;
+        // $montantTotal = $montant + $frais;
+        return response()->json([
+            'montant'=>$montant,
+            'frais'=>$frais,
+            'num_receveur'=>$client_receveur->numero_telephone
+        ], 200);
+    }
     /**
      * Store a newly created resource in storage.
      */

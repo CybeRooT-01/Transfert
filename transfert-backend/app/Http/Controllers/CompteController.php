@@ -2,17 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\BloqueDebloquePutRequest;
-use App\Http\Requests\CompteCloseRequest;
-use App\Http\Requests\ComptePostRequest;
 use Carbon\Carbon;
 use App\Models\Client;
 use App\Models\Compte;
 use App\Models\Transaction;
+use App\Http\Requests\ComptePostRequest;
+use App\Http\Requests\CompteCloseRequest;
+use App\Http\Requests\RetraitCodeRequest;
 use App\Http\Requests\transfertPostRequest;
+use App\Http\Requests\BloqueDebloquePutRequest;
 
 class CompteController extends Controller
 {
+    public function getClientByNumero($numero)
+    {
+        $client = Client::where('numero_telephone', $numero)->first();
+        if (!$client) {
+            return response()->json(['message' => "Ce client n'existe pas."], 404);
+        }
+        return $client;
+    }
     public function bloquerDebloquerCompte(BloqueDebloquePutRequest $request){
         $numCompte = $request->numero_compte;
         $compte = Compte::where('numero_compte', $numCompte)->where('statut', 1)->first();
@@ -100,7 +109,7 @@ class CompteController extends Controller
     {
         $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
         $fournisseurEnvoyeur = strtolower($numCompteenvoyeur[0] . $numCompteenvoyeur[1]);
-        if ($fournisseur == 'wari' && ($fournisseurEnvoyeur != 'wr')) {
+        if ($fournisseur == '' && ($fournisseurEnvoyeur != '')) {
             return response()->json(['message' => 'le fournisseur wari ne peut effectuer que des transferts entre comptes wari'], 400);
         } elseif ($fournisseur == 'cb' && $fournisseurEnvoyeur != 'cb') {
             return response()->json(['message' => 'le fournisseur carte bancaire ne peut effectuer que des transferts entre comptes carte bancaire'], 400);
@@ -110,13 +119,85 @@ class CompteController extends Controller
             return response()->json(['message' => 'le fournisseur wave ne peut effectuer que des transferts entre comptes wave'], 400);
         }
     }
-    private function traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible)
+    private function traiterDepotWari($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible)
     {
+        
         if (!$avecCode) {
             $codeTransaction = $this->generateRandomcode(15);
-            $client = Compte::where('numero_compte', $numCompteenvoyeur)->where('statut', 1)->first();
+            $client = Client::where('numero_telephone', $numCompteenvoyeur)->first();
+
             if (!$client) {
-                return response()->json(['message' => 'Client inexistant'], 400);
+                return response()->json(['message' => "Cet utilisateur n'existe pas"], 400);
+            }
+            
+            $data =  $this->checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur);
+            if ($data != null) {
+                return $data;
+            }
+
+            $compteCible = Client::where('numero_telephone', $numeroCompteCible)->first();
+            if (!$compteCible) {
+                return response()->json(['message' => 'Client introuvable'], 400);
+            }
+           $transac =  Transaction::create([
+                'montant' => $montant,
+                'type_transaction' => $type,
+                'date_transaction' => Carbon::now(),
+                'Client_Envoeyur_Id' => $client->id,
+                'Client_Receveur_Id' => $compteCible->id,
+                'frais' => $frais,
+                'permanent' => false,
+                'code_transaction' => $codeTransaction
+            ]);
+            return response()->json([
+                'message' => 'depot effectue avec succes',
+                'code' => $codeTransaction,
+                'frais' => $frais,
+                'transaction' => $transac,
+            ], 200);
+        } else {
+            $compteEnvoyeur = Compte::where('numero_compte', $numCompteenvoyeur)->first();
+            $data = $this->checkEnvoyabilite($numCompteenvoyeur, $numeroCompteCible, $fournisseur);
+            if ($data != null) {
+                return $data;
+            }
+            if (!$compteEnvoyeur) {
+                return response()->json(['message' => 'compte envoyeur introuvable'], 400);
+            } else {
+                $montantTotal = $montant + $frais;
+                if ($compteEnvoyeur->solde < $montantTotal) {
+                    return response()->json(['message' => 'solde insuffisant'], 400);
+                }
+                $compteEnvoyeur->solde -= $montantTotal;
+                $codeTransaction = $this->generateRandomcode(25);
+                $compteEnvoyeur->save();
+                Transaction::create([
+                    'montant' => $montant,
+                    'type_transaction' => $type,
+                    'date_transaction' => Carbon::now(),
+                    'envoyeur_id' => $compteEnvoyeur->id,
+                    'receveur_id' => null,
+                    'frais' => $frais,
+                    'permanent' => false,
+                    'code_transaction' => $codeTransaction
+                ]);
+                return response()->json([
+                    'message' => 'depot effectue avec succes',
+                    'code' => $codeTransaction,
+                    'frais' => $frais,
+                ], 200);
+            }
+        }
+    }
+    private function traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible)
+    {
+        
+        if (!$avecCode) {
+            $codeTransaction = $this->generateRandomcode(15);
+            $client = Compte::where('numero_compte', $numCompteenvoyeur)->where('statut',1)->first();
+
+            if (!$client) {
+                return response()->json(['message' => 'Client inexistanteeeee bug'], 400);
             }
 
             $fournisseurCible = strtolower($numeroCompteCible[0] . $numeroCompteCible[1]);
@@ -227,6 +308,32 @@ class CompteController extends Controller
             ], 200);
         }
     }
+    public function retraitByCode(RetraitCodeRequest $request){
+        $code = $request->code;
+        $numero = $request->numero;
+
+        $transaction = Transaction::where('code_transaction', $code)->first();
+        $receveurNum = Client::where('id', $transaction->Client_Receveur_Id)->first();
+        if($receveurNum->numero_telephone !== $numero){
+            return response()->json(['message' => "Ce numero ne peux pas retirer l'argent"], 400);
+        }
+
+        if(!$transaction){
+            return response()->json(['message' => 'code invalide'], 400);
+        }
+        if($transaction->retrait !== 0){
+            return response()->json(['message' => 'code deja utilise'], 400);
+        }
+        $transaction->retrait = 1;
+        $transaction->etat = 0;
+        $transaction->montant = $transaction->montant - $transaction->frais;
+        $transaction->save();
+        return response()->json([
+            'message' => 'retrait effectue avec succes',
+            'montant' => $transaction->montant,
+            'frais' => $transaction->frais,
+        ], 200);
+    }
 
     private function traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanant)
     {
@@ -247,10 +354,7 @@ class CompteController extends Controller
         if ($data != null) {
             return $data;
         }
-
         $montantTotal = $montant + $frais;
-
-
         if ($permanant === true && $fournisseur == 'cb') {
             $dateActuelle = Carbon::now();
             $codeTransaction = $this->generateRandomcode(30);
@@ -341,14 +445,14 @@ class CompteController extends Controller
                 $frais = 0;
         }
         if ($fournisseur === 'wari') {
-            $fournisseurShort = 'wr';
+             $fournisseurShort = '';
             $permanent = true;
             if ($type == 'depot') {
-                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+                return response()->json(['message' => 'depot non autorise sur wari'], 400);
             } elseif ($type == 'retrait') {
-                return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
+                return response()->json(['message' => 'retrait sur wari doit etre avec code'], 400);
             } elseif ($type === "transfert") {
-                return $this->traiterTransfert($numCompteenvoyeur, $numeroCompteCible, $montant, $type, $frais, $fournisseur, $permanent);
+                return $this->traiterDepotWari($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible);
             } else {
                 return $this->transfertNonReconnu();
             }
@@ -356,7 +460,7 @@ class CompteController extends Controller
             $fournisseurShort = 'om';
             $permanent = true;
             if ($type == 'depot') {
-                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $NumclientEnvoyeur, $numCompteenvoyeur, $numeroCompteCible);
+                return $this->traiterDepot($type, $fournisseur, $fournisseurShort, $avecCode, $montant, $frais, $numCompteenvoyeur, $numeroCompteCible);
             } elseif ($type == 'retrait') {
                 return $this->traiterRetrait($numCompteenvoyeur, "", $montant, $type, $frais, $fournisseur, $fournisseurShort);
             } elseif ($type === "transfert") {

@@ -68,6 +68,9 @@
           >
             Annuler Transaction
           </button>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+            Retrait avec Code
+          </button>        
         </div>
 
         <hr />
@@ -523,7 +526,6 @@
       aria-hidden="true"
     >
       <div class="modal-dialog modal-lg">
-        <!-- Utilisation de modal-lg pour une largeur plus grande -->
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="cancelTransactionModalLabel">
@@ -562,6 +564,39 @@
         </div>
       </div>
     </div>
+
+    <!-- retrait avec code -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="withdrawModalLabel">Retrait avec Code de Transaction</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="transactionCode" class="form-label">Code de Transaction</label>
+                <input type="text" class="form-control" id="transactionCode" placeholder="Entrez le code de transaction">
+              </div>
+              <div class="mb-3">
+                <label for="transactionTel" class="form-label">Numero de Telephone</label>
+                <input type="text" class="form-control" id="transactionTel" placeholder="Entrez le numero du receveur">
+              </div>
+              <div class="mb-3">
+                <label for="transactionMontant" class="form-label">Montant</label>
+                <input type="text" class="form-control" id="transactionMontant" placeholder="" readonly>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary retraitCode">Valider</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
 
     <script type="module" src="./dist/transaction.js"></script>
     <script
