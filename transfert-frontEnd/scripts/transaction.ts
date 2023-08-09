@@ -431,7 +431,6 @@ transactionCode.addEventListener('input', () => {
   transactionMontant.value = "";
   let code = transactionCode.value;
   let url = `http://127.0.0.1:8000/api/code/${code}/montant`;
-  let numero:string
   fetch(url)
     .then((response) => response.json())
     .then((datas) => {
@@ -448,7 +447,6 @@ transactionCode.addEventListener('input', () => {
             }else{
               console.log("pas ok");
             }
-            
           })
           .catch((error) => {
             console.log(error);

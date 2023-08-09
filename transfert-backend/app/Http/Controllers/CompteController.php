@@ -225,7 +225,7 @@ class CompteController extends Controller
                 'receveur_id' => $compteCible->id,
                 'frais' => $frais,
                 'permanent' => false,
-                'code_transaction' => $codeTransaction
+                'code_transaction' => $codeTransaction,
             ]);
             return response()->json([
                 'message' => 'depot effectue avec succes',
@@ -314,6 +314,9 @@ class CompteController extends Controller
 
         $transaction = Transaction::where('code_transaction', $code)->first();
         $receveurNum = Client::where('id', $transaction->Client_Receveur_Id)->first();
+        if($receveurNum == null){
+            return response()->json(['message' => "Ce numero n'a pas de code a retirer"], 400);
+        }
         if($receveurNum->numero_telephone !== $numero){
             return response()->json(['message' => "Ce numero ne peux pas retirer l'argent"], 400);
         }
